@@ -1,4 +1,3 @@
-index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +9,7 @@ index.html
 <meta name="apple-mobile-web-app-title" content="Resume Tailor">
 <title>Resume Tailor</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--text:#1d1f23;--muted:#5f6670;--border:#e2e5ea;--accent:#2563eb;--ok-bg:#e7f6ec;--ok:#1e7a3c;--warn-bg:#fdf1dc;--warn:#8a5a00;--err:#c62828}
+:root{--bg:#f6f7f9;--card:#fff;--text:#1d1f23;--muted:#5f6670;--border:#e2e5ea;--accent:#2563eb;--ok-bg:#e7f6ec;--ok:#1e7a3c;--eq-bg:#e6effd;--eq:#1d4ed8;--warn-bg:#fdf1dc;--warn:#8a5a00;--err:#c62828}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
 main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
@@ -30,19 +29,21 @@ button:disabled{opacity:.6;cursor:wait}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .msg{font-size:13px;margin:6px 0 0;min-height:1em;white-space:pre-line}
 .msg.err{color:var(--err)}.msg.ok{color:var(--ok)}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 .metric{background:var(--bg);border-radius:8px;padding:12px}
 .metric span{display:block;font-size:12px;color:var(--muted)}
 .metric b{font-size:22px}
 .chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:6px;margin:0 6px 6px 0}
-.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.miss{background:var(--warn-bg);color:var(--warn)}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.eq{background:var(--eq-bg);color:var(--eq)}.chip.miss{background:var(--warn-bg);color:var(--warn)}
 .small{font-size:13px;color:var(--muted);margin:8px 0}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 12px;white-space:pre-line}
 .hidden{display:none}
 pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;font:inherit;font-size:14px;margin:12px 0 0}
 #printArea{display:none}
 @media(max-width:600px){
   main{padding:16px 12px 48px}
-  .row,.metrics{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
   .inline{flex-direction:column}
   input,select,textarea{font-size:16px}
   .actions button{flex:1 1 100%;padding:12px}
@@ -64,7 +65,7 @@ pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8
 <body>
 <main>
 <h1>Resume Tailor</h1>
-<p class="sub">Paste a job description, check your keyword match, and get a tailored resume.</p>
+<p class="sub">Paste any job description, check your keyword match, and get an honest, tailored resume.</p>
 
 <section class="card">
 <h2>1. Settings</h2>
@@ -85,8 +86,8 @@ pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8
 <section class="card">
 <h2>3. Job details</h2>
 <div class="row">
-<div><label for="role">Target role (optional)</label><input id="role" placeholder="Backend Developer"></div>
-<div><label for="company">Company (optional)</label><input id="company" placeholder="Zoho"></div>
+<div><label for="role">Target role (optional)</label><input id="role" placeholder="Python GenAI Developer"></div>
+<div><label for="company">Company (optional)</label><input id="company" placeholder="Infosys"></div>
 </div>
 <label for="jd">Job description</label>
 <textarea id="jd" rows="10" placeholder="Paste the full job description here"></textarea>
@@ -102,6 +103,7 @@ pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8
 <section class="card hidden" id="resultCard">
 <h2>Tailored resume</h2>
 <p class="small" id="afterOut"></p>
+<div class="warnbox hidden" id="warnOut"></div>
 <textarea id="output" rows="24"></textarea>
 <div class="actions"><button id="copyBtn">Copy text</button><button id="pdfBtn" class="primary">Download PDF</button></div>
 <p class="msg" id="outMsg"></p>
@@ -111,19 +113,20 @@ pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8
 <div id="printArea"></div>
 
 <script>
+const RESUME_VERSION = '2';
 const DEFAULT_RESUME = `RITHVIK PRATAPANI
 +91-9063172924 • rithvik.pratapani03@gmail.com • linkedin.com/in/rithvik-pratapani
 
 PROFESSIONAL SUMMARY
-Backend Software Developer with 1+ year of experience building Node.js/Fastify and Python/FastAPI services for an IoT water-management platform. Built an LLM-powered prompt suggestion engine using Sentence Transformers, PostgreSQL pgvector, Redis vector caching, and Gemini, focused on low-latency APIs and reduced LLM cost.
+Backend Software Developer with 1+ year of experience building Node.js/Fastify and Python/FastAPI services for an IoT water-management platform. Builds Generative AI features with LLM integration (Gemini), prompt engineering, Sentence Transformers embeddings, PostgreSQL pgvector, and Redis vector caching, focused on low-latency APIs and reduced LLM cost.
 
 SKILLS
 • Languages: JavaScript, Python, SQL
 • Backend & APIs: Node.js, Fastify, FastAPI, REST API Design, JWT Authentication, Role-Based Access Control
 • Databases & Caching: MongoDB (Mongoose), PostgreSQL (pgvector), Redis (Vector Search)
-• AI & LLM Integration: NLP (spaCy), Sentence Transformers, Semantic Search, Vector Indexing (HNSW), Gemini API
+• Generative AI & LLM Integration: Gemini API, Prompt Engineering, NLP (spaCy), Sentence Transformers, Semantic Search, Vector Indexing (HNSW)
 • Cloud & Messaging: AWS (Lambda, API Gateway, DynamoDB, S3, Cognito), MQTT
-• Tools: Git, GitHub, Docker, SQLAlchemy
+• Tools: Git, GitHub, Docker, SQLAlchemy, GitHub Pages
 
 EXPERIENCE
 Junior Software Developer
@@ -131,7 +134,7 @@ Arminta Solutions Private Limited | Hyderabad | Sep 2025 – Present
 Water Management Platform (Node.js, Fastify, MongoDB, Mongoose, MQTT)
 • Built and maintained 40+ REST API endpoints across tank monitoring, tanker booking, supplier, delivery, and inventory modules using Fastify routes, controllers, and Mongoose models.
 • Developed JWT-secured, role-based workflows for 5 user roles: customers, operators, suppliers, delivery agents, and administrators.
-• Handled MQTT telemetry and emergency-event alerts from 50+ IoT tank sensors, processing and persisting readings in MongoDB; traced and resolved telemetry data issues through MongoDB queries.
+• Handled MQTT telemetry and emergency-event alerts from 50+ IoT tank sensors, processing and persisting readings in MongoDB; debugged and resolved telemetry data issues through MongoDB queries.
 • Integrated real-time updates, push notifications, file storage, and location services into backend booking and delivery flows.
 AI-Powered Prompt Suggestion Engine (Python, FastAPI, Redis, PostgreSQL, Gemini)
 • Built a real-time FastAPI service that uses spaCy NLP to turn partial user input into contextual keyword suggestions, responding in under 200 ms.
@@ -139,6 +142,10 @@ AI-Powered Prompt Suggestion Engine (Python, FastAPI, Redis, PostgreSQL, Gemini)
 • Added Redis embedding and semantic caching with HNSW vector indexing to serve similar queries from cache, cutting Gemini 2.5 Flash Lite API calls by ~40%.
 
 PROJECTS
+AI Resume Tailor (Generative AI Web App) | JavaScript, Gemini API, Prompt Engineering, GitHub Pages
+• Built a Generative AI web app that tailors a resume to any job description using the Gemini API, with prompt-engineering rules that prevent invented skills and preserve every fact and metric.
+• Implemented automatic multi-model fallback with request timeouts and error handling for rate limits, unavailable models, and invalid API keys.
+• Added an ATS keyword-match analyzer covering 100+ skills with before/after scoring and an honesty check, plus PDF export; deployed as a mobile-installable app on GitHub Pages.
 Serverless E-Commerce Bookstore on AWS | Lambda, API Gateway, DynamoDB, S3, Cognito
 • Built a serverless e-commerce backend with AWS Lambda and API Gateway REST endpoints for book catalog, shopping cart, and order management, using DynamoDB for data persistence.
 • Secured user sign-up, login, and protected APIs with Amazon Cognito, and stored book cover images in Amazon S3.
@@ -147,19 +154,52 @@ EDUCATION
 Bachelor of Technology in Computer Science
 Institute of Aeronautical Engineering, Hyderabad | 2021 – 2025`;
 
-const DEFAULT_MODELS = ["gemini-3.5-flash","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-2.5-flash","gemini-2.5-flash-lite"];
+const DEFAULT_MODELS = ["gemini-3.6-flash","gemini-3.5-flash","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-2.5-flash","gemini-2.5-flash-lite"];
 const API = "https://generativelanguage.googleapis.com/v1beta";
 const TIMEOUT_MS = 60000;
 
-const K=[["Node.js",["node.js","nodejs","node js"]],["Express.js",["express.js","expressjs","express"]],["Fastify",["fastify"]],["NestJS",["nestjs","nest.js"]],["FastAPI",["fastapi"]],["Django",["django"]],["Flask",["flask"]],["Spring Boot",["spring boot","spring"]],["Java",["java"]],["Python",["python"]],["JavaScript",["javascript"]],["TypeScript",["typescript"]],["Go",["golang"]],["C++",["c++"]],["C#",["c#"]],[".NET",[".net"]],["SQL",["sql"]],["NoSQL",["nosql"]],["MongoDB",["mongodb","mongo"]],["Mongoose",["mongoose"]],["PostgreSQL",["postgresql","postgres"]],["MySQL",["mysql"]],["Redis",["redis"]],["DynamoDB",["dynamodb"]],["Elasticsearch",["elasticsearch"]],["Kafka",["kafka"]],["RabbitMQ",["rabbitmq"]],["MQTT",["mqtt"]],["GraphQL",["graphql"]],["REST APIs",["rest api","rest apis","restful"]],["gRPC",["grpc"]],["Microservices",["microservices","microservice"]],["AWS",["aws","amazon web services"]],["Lambda",["lambda"]],["S3",["s3"]],["API Gateway",["api gateway"]],["Cognito",["cognito"]],["EC2",["ec2"]],["Azure",["azure"]],["GCP",["gcp","google cloud"]],["Serverless",["serverless"]],["Docker",["docker"]],["Kubernetes",["kubernetes","k8s"]],["CI/CD",["ci/cd","cicd","ci cd"]],["Jenkins",["jenkins"]],["GitHub Actions",["github actions"]],["Git",["git","github","gitlab"]],["Linux",["linux"]],["Terraform",["terraform"]],["Unit testing",["unit test","unit tests","unit testing"]],["Jest",["jest"]],["Pytest",["pytest"]],["System design",["system design"]],["DSA",["data structures","algorithms","dsa"]],["JWT",["jwt"]],["OAuth",["oauth"]],["Authentication",["authentication","auth"]],["Caching",["caching","cache"]],["LLM",["llm","llms","large language model"]],["Generative AI",["generative ai","genai","gen ai"]],["RAG",["rag","retrieval-augmented","retrieval augmented"]],["Vector database",["vector database","vector db","pgvector","pinecone","faiss","vector search"]],["Embeddings",["embedding","embeddings"]],["NLP",["nlp","natural language processing"]],["Machine learning",["machine learning"]],["LangChain",["langchain"]],["OpenAI",["openai"]],["Gemini",["gemini"]],["Prompt engineering",["prompt engineering"]],["Semantic search",["semantic search"]],["WebSockets",["websocket","websockets","socket.io"]],["IoT",["iot"]],["Agile",["agile","scrum"]],["Pandas",["pandas"]],["TensorFlow",["tensorflow"]],["PyTorch",["pytorch"]],["React",["react","react.js"]],["Nginx",["nginx"]],["SQLAlchemy",["sqlalchemy"]],["Postman",["postman"]],["Swagger",["swagger","openapi"]],["Debugging",["debugging","troubleshooting"]]];
+const K=[["Node.js",["node.js","nodejs","node js"]],["Express.js",["express.js","expressjs","express"]],["Fastify",["fastify"]],["NestJS",["nestjs","nest.js"]],["FastAPI",["fastapi"]],["Django",["django"]],["Flask",["flask"]],["Spring Boot",["spring boot","spring"]],["Java",["java"]],["Python",["python"]],["JavaScript",["javascript"]],["TypeScript",["typescript"]],["Go",["golang"]],["C++",["c++"]],["C#",["c#"]],[".NET",[".net"]],["Kotlin",["kotlin"]],["Rust",["rust"]],["PHP",["php"]],["Laravel",["laravel"]],["Ruby on Rails",["ruby on rails","rails"]],["SQL",["sql"]],["NoSQL",["nosql"]],["MongoDB",["mongodb","mongo"]],["Mongoose",["mongoose"]],["PostgreSQL",["postgresql","postgres"]],["MySQL",["mysql"]],["Redis",["redis"]],["DynamoDB",["dynamodb"]],["Elasticsearch",["elasticsearch"]],["Kafka",["kafka"]],["RabbitMQ",["rabbitmq"]],["Celery",["celery"]],["MQTT",["mqtt"]],["GraphQL",["graphql"]],["REST APIs",["rest api","rest apis","restful"]],["gRPC",["grpc"]],["Microservices",["microservices","microservice"]],["Backend",["backend","back-end","back end"]],["Frontend",["frontend","front-end","front end"]],["Full stack",["full stack","full-stack","fullstack"]],["React",["react","react.js"]],["Angular",["angular"]],["Vue",["vue","vue.js"]],["Next.js",["next.js","nextjs"]],["Cloud",["cloud","cloud computing"]],["AWS",["aws","amazon web services"]],["Lambda",["lambda"]],["S3",["s3"]],["API Gateway",["api gateway"]],["Cognito",["cognito"]],["EC2",["ec2"]],["Azure",["azure"]],["GCP",["gcp","google cloud"]],["Serverless",["serverless"]],["Docker",["docker"]],["Kubernetes",["kubernetes","k8s"]],["Helm",["helm"]],["Terraform",["terraform"]],["Ansible",["ansible"]],["CI/CD",["ci/cd","cicd","ci cd"]],["Jenkins",["jenkins"]],["GitHub Actions",["github actions"]],["Git",["git","github","gitlab"]],["Linux",["linux"]],["Nginx",["nginx"]],["Monitoring",["monitoring","observability","prometheus","grafana"]],["Unit testing",["unit test","unit tests","unit testing"]],["Jest",["jest"]],["Pytest",["pytest"]],["Selenium",["selenium"]],["Playwright",["playwright"]],["Postman",["postman"]],["Swagger",["swagger","openapi spec"]],["System design",["system design"]],["DSA",["data structures","algorithms","dsa"]],["OOP",["oop","object-oriented","object oriented"]],["Design patterns",["design patterns"]],["Scalability",["scalability","scalable"]],["Performance optimization",["performance optimization","performance tuning","optimize","optimization"]],["Security",["security","secure coding"]],["JWT",["jwt"]],["OAuth",["oauth"]],["Authentication",["authentication","auth"]],["Caching",["caching","cache"]],["Real-time systems",["real-time","realtime","real time"]],["Event-driven",["event-driven","event driven"]],["IoT",["iot"]],["ETL",["etl","data pipeline","data pipelines"]],["Spark",["spark","pyspark"]],["Airflow",["airflow"]],["Pandas",["pandas"]],["NumPy",["numpy"]],["Power BI",["power bi"]],["Tableau",["tableau"]],["Excel",["excel"]],["Machine learning",["machine learning"]],["TensorFlow",["tensorflow"]],["PyTorch",["pytorch"]],["Hugging Face",["hugging face","huggingface"]],["Fine-tuning",["fine-tuning","fine tuning","finetuning"]],["MLOps",["mlops"]],["LLM",["llm","llms","large language model","large language models"]],["Generative AI",["generative ai","genai","gen ai"]],["RAG",["rag","retrieval-augmented","retrieval augmented"]],["AI agents",["ai agents","agentic","autogen","crewai"]],["LangChain",["langchain"]],["LlamaIndex",["llamaindex"]],["OpenAI",["openai"]],["Azure OpenAI",["azure openai"]],["Vertex AI",["vertex ai"]],["AWS Bedrock",["bedrock"]],["Gemini",["gemini"]],["Prompt engineering",["prompt engineering"]],["Vector database",["vector database","vector databases","vector db","pgvector","pinecone","faiss","chromadb","vector search"]],["Embeddings",["embedding","embeddings"]],["Semantic search",["semantic search"]],["NLP",["nlp","natural language processing"]],["Copilot",["copilot"]],["WebSockets",["websocket","websockets","socket.io"]],["Agile",["agile","scrum"]],["Debugging",["debugging","troubleshooting"]],["Problem solving",["problem solving","problem-solving"]],["Communication",["communication"]],["Collaboration",["collaboration","teamwork","team player"]]];
+
+const EQ_SRC = {
+  "Generative AI":["llm","llms","gemini","openai","large language model"],
+  "LLM":["gemini","generative ai","openai"],
+  "RAG":["semantic retrieval"],
+  "Debugging":["debugged","resolved","traced","troubleshot"],
+  "Problem solving":["debugged","resolved","optimized"],
+  "REST APIs":["rest endpoints","api endpoints","rest api design"],
+  "Vector database":["pgvector","vector search","vector store"],
+  "Semantic search":["semantic retrieval"],
+  "Embeddings":["sentence transformers"],
+  "Caching":["cached"],
+  "Cloud":["aws","azure","gcp"],
+  "NoSQL":["mongodb","dynamodb"],
+  "SQL":["postgresql","mysql"],
+  "Authentication":["jwt","cognito","oauth"],
+  "Serverless":["lambda"],
+  "JavaScript":["node.js","nodejs"],
+  "Backend":["node.js","fastapi","fastify","django"],
+  "Event-driven":["mqtt"],
+  "Performance optimization":["latency","cutting","reduced"],
+  "IoT":["sensors","telemetry"]
+};
+
 const esc = s => s.replace(/[.*+?^${}()|[\]\\\/#]/g,'\\$&');
-const RX = K.map(([l,a]) => [l, new RegExp('(?:^|[^a-z0-9])(?:'+a.map(esc).join('|')+')(?![a-z0-9])','i')]);
+const mk = a => new RegExp('(?:^|[^a-z0-9])(?:'+a.map(esc).join('|')+')(?![a-z0-9])','i');
+const RX = K.map(([l,a]) => [l, mk(a)]);
+const EQ = Object.fromEntries(Object.entries(EQ_SRC).map(([l,a]) => [l, mk(a)]));
 
 const $ = id => document.getElementById(id);
 const store = {get:k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const msg = (id,text,type) => { $(id).textContent = text; $(id).className = 'msg ' + (type||''); };
 const escH = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const shortMsg = s => (s || '').split('\n')[0].slice(0, 90);
+
+if (store.get('rt_resume_ver') !== RESUME_VERSION) {
+  const old = store.get('rt_resume');
+  if (old) store.set('rt_resume_backup', old);
+  store.set('rt_resume', DEFAULT_RESUME);
+  store.set('rt_resume_ver', RESUME_VERSION);
+}
 
 function getModelList(){ return JSON.parse(store.get('rt_models') || 'null') || DEFAULT_MODELS; }
 function fillModels(list, selected){
@@ -224,7 +264,7 @@ async function callModel(model, key, prompt){
     const r = await fetch(`${API}/models/${encodeURIComponent(model)}:generateContent`, {
       method:'POST',
       headers:{'Content-Type':'application/json','x-goog-api-key':key},
-      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.4}}),
+      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.3}}),
       signal: ctrl.signal
     });
     let d = {}; try { d = await r.json(); } catch(e) {}
@@ -242,24 +282,35 @@ const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.tes
 
 function analyze(jd, rs){
   const inJd = RX.filter(([,r]) => r.test(jd));
-  const hit = inJd.filter(([,r]) => r.test(rs)).map(x => x[0]);
-  const miss = inJd.filter(([,r]) => !r.test(rs)).map(x => x[0]);
-  return {hit, miss, total: inJd.length, score: inJd.length ? Math.round(hit.length / inJd.length * 100) : 0};
+  const hit = [], equiv = [], miss = [];
+  for (const [l,r] of inJd) {
+    if (r.test(rs)) hit.push(l);
+    else if (EQ[l] && EQ[l].test(rs)) equiv.push(l);
+    else miss.push(l);
+  }
+  const t = inJd.length;
+  return {hit, equiv, miss, total:t,
+    score: t ? Math.round(hit.length / t * 100) : 0,
+    potential: t ? Math.round((hit.length + equiv.length) / t * 100) : 0};
 }
 
 function renderMatch(a){
   const color = a.score >= 75 ? 'var(--ok)' : a.score >= 50 ? 'var(--warn)' : 'var(--err)';
-  const tip = a.total === 0 ? 'No common tech keywords found in this job description.'
-    : a.score >= 75 ? 'Strong match. Tailoring will mostly sharpen the wording.'
-    : a.score >= 50 ? 'Decent match. Tailoring should lift it noticeably.'
-    : 'Low match. Check whether this role really fits your skills.';
+  const tip = a.total === 0 ? 'No common keywords found in this job description. Tailoring will still adapt the wording.'
+    : a.potential >= 75 ? 'Strong fit. Tailoring should push your score close to the potential.'
+    : a.potential >= 50 ? 'Decent fit. Tailoring will add the honest equivalents.'
+    : 'Low fit. Check whether this role really matches your skills before applying.';
+  const chips = (arr, cls) => arr.map(h => `<span class="chip ${cls}">${escH(h)}</span>`).join('');
   $('matchOut').innerHTML =
-    `<div class="metrics"><div class="metric"><span>Keyword match</span><b style="color:${color}">${a.score}%</b></div>
-     <div class="metric"><span>Job keywords found</span><b>${a.total}</b></div>
-     <div class="metric"><span>Missing from resume</span><b>${a.miss.length}</b></div></div>
+    `<div class="metrics">
+      <div class="metric"><span>Keyword match</span><b style="color:${color}">${a.score}%</b></div>
+      <div class="metric"><span>Honest potential</span><b>${a.potential}%</b></div>
+      <div class="metric"><span>Job keywords</span><b>${a.total}</b></div>
+      <div class="metric"><span>Truly missing</span><b>${a.miss.length}</b></div></div>
      <p class="small">${tip}</p>` +
-    (a.hit.length ? `<p class="small">Already in your resume</p><div>${a.hit.map(h=>`<span class="chip ok">${escH(h)}</span>`).join('')}</div>` : '') +
-    (a.miss.length ? `<p class="small">Missing. Add only the ones you have actually used.</p><div>${a.miss.map(h=>`<span class="chip miss">${escH(h)}</span>`).join('')}</div>` : '');
+    (a.hit.length ? `<p class="small">Already in your resume</p><div>${chips(a.hit,'ok')}</div>` : '') +
+    (a.equiv.length ? `<p class="small">Can add honestly (your resume already proves these under another name)</p><div>${chips(a.equiv,'eq')}</div>` : '') +
+    (a.miss.length ? `<p class="small">Missing. Add only the ones you have actually used.</p><div>${chips(a.miss,'miss')}</div>` : '');
   $('matchCard').classList.remove('hidden');
 }
 
@@ -271,26 +322,42 @@ function validate(){
 
 $('checkBtn').onclick = () => { if (validate()) { msg('jdMsg',''); renderMatch(analyze($('jd').value, $('resume').value)); } };
 
-function buildPrompt(jd, rs, miss){
+function buildPrompt(jd, rs, a){
   const role = $('role').value.trim(), co = $('company').value.trim();
-  return `You are an expert technical resume writer and ATS specialist. Tailor the candidate's resume to the job description below.
+  return `You are an expert resume writer and ATS specialist. Tailor the candidate's resume to the job description below. This must work for any role, so follow the job description's own language rather than a fixed template.
 
 Strict rules:
-1. Keep the same sections in the same order: header (name and contact line), PROFESSIONAL SUMMARY, SKILLS, EXPERIENCE, PROJECTS, EDUCATION. It must fit on one page.
-2. Never invent anything. Keep every company, job title, date, project, metric and number exactly as given. Do not add tools, skills or experience that are not already in the resume.
-3. Rewrite the PROFESSIONAL SUMMARY in 2-3 lines for the target role, using the job description's key terms that the candidate genuinely has.
-4. Reorder SKILLS so the skills the job asks for come first. You may rename a skill to the job's exact wording only when it means the same thing (for example "REST API Design" to "RESTful APIs").
-5. Reword bullets to use the job description's terminology where it honestly fits, and move the most relevant bullets to the top of each block. Start every bullet with a strong action verb. Keep each bullet under about 30 words.
-6. Output plain text only. No markdown, no asterisks, no # symbols. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep the job title, company line, project sub-headings and education lines on their own lines exactly as in the original layout.
-7. After the resume, write a line containing only ===NOTES=== and then: (a) 3-5 short lines on what you changed, (b) the job's important skills that are missing from the resume, so the candidate can decide whether they genuinely have them.
+1. Keep the same sections, in the same order and with the same headings, as the candidate's resume. It must still fit on one page.
+2. Never invent anything. Keep every company, job title, date, project, feature, technology, metric and number exactly as given. Do not add tools, skills, responsibilities or experience that the resume does not already show.
+3. Do not exaggerate. Keep the strength of each claim: do not upgrade verbs (for example "Built" must not become "Architected", "Led", "Spearheaded" or "Owned"), and never describe the candidate as an expert, senior or lead.
+4. Do not change what a technology does, and do not remove details. Every bullet in the original must still be present (rewording is fine), including every feature and tool it mentions.
+5. Use the job's exact wording where the resume already proves the skill. These job terms are honestly supported by the resume, so add them in the job's exact wording where they fit naturally (summary, skills, or the bullet that proves them): ${a.equiv.join(', ') || 'none'}.
+6. Rewrite the summary in 2-3 lines for this role, using only job terms the candidate genuinely has.
+7. Reorder skills within each category so the job's skills come first, and reorder bullets and blocks so the most relevant ones come first. Keep the existing skill categories and never merge unrelated items into one category. You may rename a category only if the new name is accurate.
+8. Start every bullet with a strong but accurate action verb. Keep each bullet under about 30 words.
+9. Output plain text only. No markdown, no asterisks, no # symbols. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep job titles, company lines, project headings and education lines on their own lines as in the original.
+10. After the resume, write a line containing only ===NOTES=== and then: (a) 3-5 short lines on what you changed, (b) important job skills that are still missing, so the candidate can decide whether they genuinely have them.
 
-${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}Job keywords missing from the resume: ${miss.join(', ') || 'none'}
+${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}Job keywords still missing (do NOT add these): ${a.miss.join(', ') || 'none'}
 
 JOB DESCRIPTION:
 ${jd}
 
 RESUME:
 ${rs}`;
+}
+
+function honestyCheck(orig, out){
+  const warn = [];
+  const risky = ["architected","spearheaded","led","headed","orchestrated","pioneered","owned","expert","senior","lead","mentored","managed a team"];
+  const added = risky.filter(w => { const r = mk([w]); return r.test(out) && !r.test(orig); });
+  if (added.length) warn.push('New strong claims to double-check: ' + added.join(', '));
+  const nums = s => new Set((s.match(/\d+(?:\.\d+)?%?\+?/g) || []));
+  const a = nums(orig), b = nums(out);
+  const lost = [...a].filter(x => !b.has(x)), extra = [...b].filter(x => !a.has(x));
+  if (lost.length) warn.push('Numbers from your resume that are missing now: ' + lost.join(', '));
+  if (extra.length) warn.push('New numbers that are not in your base resume: ' + extra.join(', '));
+  return warn;
 }
 
 $('tailorBtn').onclick = async () => {
@@ -308,7 +375,7 @@ $('tailorBtn').onclick = async () => {
   try {
     if (!store.get('rt_models_loaded')) { btn.textContent = 'Loading models…'; try { await fetchModels(key); } catch(e) {} }
     const models = orderModels();
-    const prompt = buildPrompt(jd, rs, before.miss);
+    const prompt = buildPrompt(jd, rs, before);
     const failures = [];
     let text = '', used = '';
 
@@ -327,10 +394,16 @@ $('tailorBtn').onclick = async () => {
     const [resPart, notesPart] = text.split('===NOTES===');
     const clean = resPart.replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
     $('output').value = clean;
+
     const after = analyze(jd, clean);
-    $('afterOut').textContent = `Keyword match: ${before.score}% before → ${after.score}% after. Made with ${used}` +
-      (failures.length ? ` (skipped ${failures.length} model${failures.length > 1 ? 's' : ''} that failed)` : '') +
-      '. Review every line before sending; you must be able to explain it in an interview.';
+    $('afterOut').textContent = `Keyword match: ${before.score}% before → ${after.score}% after (honest potential ${before.potential}%). Made with ${used}` +
+      (failures.length ? `, after ${failures.length} model${failures.length > 1 ? 's' : ''} failed` : '') +
+      '. Review every line; you must be able to explain it in an interview.';
+
+    const warns = honestyCheck(rs, clean);
+    if (warns.length) { $('warnOut').textContent = 'Honesty check:\n' + warns.join('\n'); $('warnOut').classList.remove('hidden'); }
+    else $('warnOut').classList.add('hidden');
+
     if (notesPart && notesPart.trim()) { $('notes').textContent = notesPart.trim(); $('notes').classList.remove('hidden'); }
     else $('notes').classList.add('hidden');
     $('resultCard').classList.remove('hidden');
@@ -359,7 +432,7 @@ function resumeToHtml(text){
       if (!inList) { html += '<ul>'; inList = true; }
       let t = escH(l.replace(/^[•\-–*]\s+/,''));
       const i = t.indexOf(':');
-      if (section === 'SKILLS' && i > 0 && i < 40) t = '<b>' + t.slice(0, i + 1) + '</b>' + t.slice(i + 1);
+      if (section === 'SKILLS' && i > 0 && i < 45) t = '<b>' + t.slice(0, i + 1) + '</b>' + t.slice(i + 1);
       html += `<li>${t}</li>`; continue;
     }
     close();
