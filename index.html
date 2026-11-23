@@ -13,13 +13,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--desk:#E8ECF1;--panel:#FFFFFF;--ink:#16233A;--soft:#5A6578;--line:#D5DBE4;--accent:#2440C7;--on-accent:#FFFFFF;--hl:#FFE066;--ok:#1F7A4D;--ok-bg:#E3F3EA;--eq:#2440C7;--eq-bg:#E4E9FB;--pot:#B4C3F5;--warn:#8A5A00;--warn-bg:#FFF3D1;--err:#B3261E;--err-bg:#FCE8E6}
-@media (prefers-color-scheme:dark){:root{--desk:#0F1623;--panel:#172033;--ink:#E6EBF3;--soft:#9AA6BA;--line:#2A3650;--accent:#7D95FF;--on-accent:#0F1623;--ok:#6FD3A0;--ok-bg:#16372A;--eq:#A9B9FF;--eq-bg:#1E2A55;--pot:#34488F;--warn:#F2C25B;--warn-bg:#3A2E10;--err:#FF8A80;--err-bg:#3D1A18}}
+:root{--desk:#E8ECF1;--panel:#FFFFFF;--ink:#16233A;--soft:#5A6578;--line:#D5DBE4;--accent:#2440C7;--on-accent:#FFFFFF;--hl:#FFE066;--ok:#1F7A4D;--ok-bg:#E3F3EA;--eq:#2440C7;--eq-bg:#E4E9FB;--pot:#B4C3F5;--warn:#8A5A00;--warn-bg:#FFF3D1;--err:#B3261E}
+@media (prefers-color-scheme:dark){:root{--desk:#0F1623;--panel:#172033;--ink:#E6EBF3;--soft:#9AA6BA;--line:#2A3650;--accent:#7D95FF;--on-accent:#0F1623;--ok:#6FD3A0;--ok-bg:#16372A;--eq:#A9B9FF;--eq-bg:#1E2A55;--pot:#34488F;--warn:#F2C25B;--warn-bg:#3A2E10;--err:#FF8A80}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--desk);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5}
 h2{font-size:15px;font-weight:600;margin:0}
+h3{font-size:17px;font-weight:700;margin:0 0 6px}
 p{margin:0}
+a{color:var(--accent)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input,select,textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
@@ -32,6 +34,7 @@ button.primary:hover{filter:brightness(1.08)}
 button.ghost{background:transparent}
 button.sm{padding:6px 11px;font-size:13px}
 button.big{width:100%;padding:14px;font-size:16px}
+button.danger{color:var(--err)}
 button[aria-busy="true"]{opacity:.75;cursor:progress}
 .top{max-width:1240px;margin:0 auto;padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em}
@@ -42,14 +45,22 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .settings{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
 .inline{display:flex;gap:8px}
 .inline>:first-child{flex:1}
-.hint{font-size:13px;color:var(--soft)}
-.banner{margin-top:14px;background:var(--eq-bg);color:var(--eq);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:500}
+.hint{font-size:13px;color:var(--soft);margin-top:6px}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+.guide{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.guide ol{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:14px}
+.guide li{display:grid;grid-template-columns:28px 1fr;gap:12px;align-items:start}
+.stepn{width:28px;height:28px;border-radius:50%;background:var(--desk);display:grid;place-items:center;font-weight:700;font-size:13px}
+.guide li.done .stepn{background:var(--ok);color:var(--panel)}
+.stept{font-weight:600}
+.guide li.done .stept::after{content:" Done";color:var(--ok);font-weight:500;font-size:13px}
+.stepb{font-size:14px;color:var(--soft);margin:2px 0 8px}
+.private{font-size:13px;color:var(--soft);margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
 .layout{max-width:1240px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:24px;align-items:start}
 .work{display:grid;gap:16px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .jdhead{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:14px}
-.jdhead label{margin:0 0 6px}
 .tools{display:flex;gap:6px;margin-bottom:6px}
 .count{font-size:12px;color:var(--soft);margin-top:6px}
 .fieldmsg{font-size:13px;color:var(--err);margin-top:6px}
@@ -75,8 +86,7 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .actionbar{display:grid;gap:8px}
 .status{font-size:13px;color:var(--soft);min-height:1.2em;white-space:pre-line}
 .status.err{color:var(--err)}
-.result p+p{margin-top:8px}
-.meta{font-size:13px;color:var(--soft)}
+.meta{font-size:13px;color:var(--soft);margin-top:8px}
 .warn{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px;white-space:pre-line}
 details summary{cursor:pointer;font-weight:600;font-size:14px}
 details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;color:var(--ink)}
@@ -95,12 +105,15 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 .sheetactions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .toggle{display:inline-flex;align-items:center;gap:6px;margin:0 6px 0 0;font-size:13px;color:var(--soft);cursor:pointer}
 .toggle input{width:auto;margin:0;accent-color:var(--accent)}
-.sheetmsg{font-size:13px;color:var(--soft);margin:0 0 10px}
+.sheetmsg{font-size:13px;color:var(--soft);margin:0 0 10px;white-space:pre-line}
 .sheetmsg.over{color:var(--err)}
 .sheetwrap{overflow:hidden}
 .paper{background:#fff;color:#1a1a1a;width:8.27in;min-height:11.69in;padding:.55in .6in;transform-origin:top left;position:relative;box-shadow:0 1px 2px rgba(22,35,58,.08),0 14px 36px rgba(22,35,58,.16)}
 .pageline{position:absolute;left:0;right:0;top:11.14in;border-top:2px dashed #B3261E}
 .pageline span{position:absolute;right:.6in;top:-11px;background:#B3261E;color:#fff;font:600 11px/1 "Schibsted Grotesk",sans-serif;padding:5px 8px;border-radius:4px}
+.emptysheet{background:var(--panel);border:1.5px dashed var(--line);border-radius:14px;padding:28px 22px;text-align:left}
+.emptysheet p{color:var(--soft);font-size:14px;margin-bottom:14px}
+.fmt{background:var(--desk);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;margin-top:16px;color:var(--ink)}
 .editor{min-height:70vh;font-size:14px}
 .sheet{font-family:Carlito,Calibri,Arial,sans-serif;font-size:10.5pt;line-height:1.3;color:#000}
 .sheet h1{font-size:18pt;text-align:center;margin:0 0 2px;letter-spacing:.5px;font-weight:700}
@@ -144,20 +157,43 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 </header>
 
 <div class="wrapx">
-  <div id="banner" class="banner" hidden><span>Add your Gemini API key to start tailoring.</span><button id="bannerBtn" class="primary sm">Add key</button></div>
+  <section id="guide" class="guide" hidden aria-labelledby="guideTitle">
+    <h3 id="guideTitle">Get set up in 3 minutes</h3>
+    <p class="stepb" style="margin:0">Do this once on each phone or laptop you use.</p>
+    <ol>
+      <li id="step1"><span class="stepn">1</span><div>
+        <p class="stept">Get a free Gemini API key</p>
+        <p class="stepb">Open Google AI Studio, sign in with your Google account, tap Create API key, and copy it. It's free and needs no card.</p>
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"><button class="sm" tabindex="-1">Open Google AI Studio</button></a>
+      </div></li>
+      <li id="step2"><span class="stepn">2</span><div>
+        <p class="stept">Paste your key here</p>
+        <div class="inline" style="margin-top:6px"><input id="guideKey" type="password" placeholder="Paste your API key" autocomplete="off" aria-label="Gemini API key"><button id="guideSave" class="primary">Save key</button></div>
+        <p class="status" id="guideKeyMsg" role="status" aria-live="polite"></p>
+      </div></li>
+      <li id="step3"><span class="stepn">3</span><div>
+        <p class="stept">Add your resume</p>
+        <p class="stepb">Upload your resume PDF, or paste the text. The app formats it for you.</p>
+        <div class="btnrow"><button class="primary sm uploadBtn">Upload PDF</button><button class="sm pasteResumeBtn">Paste text</button></div>
+        <p class="status" id="guideResMsg" role="status" aria-live="polite"></p>
+      </div></li>
+    </ol>
+    <p class="private">Your key and resume stay in this browser only. The person who shared this link can't see them.</p>
+  </section>
+
   <section id="settings" class="settings" hidden aria-label="Settings">
     <div>
       <label for="apiKey">Gemini API key</label>
       <div class="inline"><input id="apiKey" type="password" placeholder="Paste your key from aistudio.google.com" autocomplete="off"><button id="saveKey" class="primary">Save key</button></div>
-      <p class="hint" style="margin-top:6px">Stored only in this browser. Never put it in the code.</p>
+      <p class="hint">Stored only in this browser. Never put it in the code or share it.</p>
     </div>
     <div>
       <label for="model">Preferred model</label>
       <div class="inline"><select id="model"></select><button id="loadModels">Refresh models</button></div>
-      <p class="hint" style="margin-top:6px">If this model fails, every other model is tried automatically.</p>
+      <p class="hint">If this model fails, every other model is tried automatically.</p>
     </div>
     <p class="status" id="setMsg" role="status" aria-live="polite"></p>
-    <div><button id="resetResume" class="ghost sm">Reset resume to built-in version</button></div>
+    <div class="btnrow"><button class="sm uploadBtn">Upload a new resume PDF</button><button id="clearData" class="ghost sm danger">Delete my data from this browser</button></div>
   </section>
 </div>
 
@@ -166,7 +202,7 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
     <section class="panel" aria-labelledby="jobTitle">
       <h2 id="jobTitle">Job</h2>
       <div class="row2">
-        <div><label for="role">Role</label><input id="role" placeholder="Python GenAI Developer"></div>
+        <div><label for="role">Role</label><input id="role" placeholder="Python Developer"></div>
         <div><label for="company">Company</label><input id="company" placeholder="Infosys"></div>
       </div>
       <div class="jdhead">
@@ -180,7 +216,7 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 
     <section class="panel" aria-labelledby="matchTitle">
       <h2 id="matchTitle">Match</h2>
-      <div id="matchBody"><p class="empty" style="margin-top:8px">Paste a job description to see how well your resume matches it.</p></div>
+      <div id="matchBody"></div>
     </section>
 
     <div class="actionbar">
@@ -202,7 +238,7 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
     </details>
   </div>
 
-  <div class="sheetcol" aria-label="Resume preview">
+  <div class="sheetcol" id="sheetcol" aria-label="Resume preview">
     <div class="sheetbar">
       <div class="seg" role="tablist" aria-label="Which resume to show">
         <button id="viewOrig" role="tab" aria-selected="true">Your resume</button>
@@ -210,67 +246,48 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
       </div>
       <div class="sheetactions">
         <label class="toggle"><input type="checkbox" id="hlToggle" checked>Highlight keywords</label>
+        <button id="tidyBtn" class="sm" hidden>Tidy with AI</button>
         <button id="editBtn" class="ghost sm">Edit</button>
         <button id="copyBtn" class="ghost sm">Copy</button>
         <button id="pdfBtn" class="primary sm">Download PDF</button>
       </div>
     </div>
     <p id="sheetMsg" class="sheetmsg" role="status" aria-live="polite"></p>
+    <div id="emptySheet" class="emptysheet" hidden>
+      <h3>Add your resume</h3>
+      <p>Upload your current resume as a PDF, or paste its text. You only do this once on each device.</p>
+      <div class="btnrow"><button class="primary uploadBtn">Upload PDF</button><button class="pasteResumeBtn">Paste text</button></div>
+      <div class="fmt">If you type or paste it yourself, use this format, or tap Tidy with AI after pasting:
+YOUR NAME
+phone • email • linkedin
+
+PROFESSIONAL SUMMARY
+Two or three lines about you.
+
+SKILLS
+• Languages: Python, JavaScript
+
+EXPERIENCE
+Job Title
+Company | City | Jan 2024 – Present
+• What you did and the result</div>
+    </div>
     <div id="sheetWrap" class="sheetwrap">
       <div id="paper" class="paper sheet"><div id="paperContent"></div><div id="pageLine" class="pageline" hidden><span>Page 2 starts here</span></div></div>
     </div>
-    <textarea id="editor" class="editor" hidden aria-label="Edit resume text"></textarea>
+    <textarea id="editor" class="editor" hidden aria-label="Edit resume text" placeholder="Paste your resume here, then tap Tidy with AI to format it."></textarea>
   </div>
 </main>
 
+<input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
 <div id="printArea" class="sheet"></div>
 
 <script>
-const RESUME_VERSION = '2';
-const DEFAULT_RESUME = `RITHVIK PRATAPANI
-+91-9063172924 • rithvik.pratapani03@gmail.com • linkedin.com/in/rithvik-pratapani
-
-PROFESSIONAL SUMMARY
-Backend Software Developer with 1+ year of experience building Node.js/Fastify and Python/FastAPI services for an IoT water-management platform. Builds Generative AI features with LLM integration (Gemini), prompt engineering, Sentence Transformers embeddings, PostgreSQL pgvector, and Redis vector caching, focused on low-latency APIs and reduced LLM cost.
-
-SKILLS
-• Languages: JavaScript, Python, SQL
-• Backend & APIs: Node.js, Fastify, FastAPI, REST API Design, JWT Authentication, Role-Based Access Control
-• Databases & Caching: MongoDB (Mongoose), PostgreSQL (pgvector), Redis (Vector Search)
-• Generative AI & LLM Integration: Gemini API, Prompt Engineering, NLP (spaCy), Sentence Transformers, Semantic Search, Vector Indexing (HNSW)
-• Cloud & Messaging: AWS (Lambda, API Gateway, DynamoDB, S3, Cognito), MQTT
-• Tools: Git, GitHub, Docker, SQLAlchemy, GitHub Pages
-
-EXPERIENCE
-Junior Software Developer
-Arminta Solutions Private Limited | Hyderabad | Sep 2025 – Present
-Water Management Platform (Node.js, Fastify, MongoDB, Mongoose, MQTT)
-• Built and maintained 40+ REST API endpoints across tank monitoring, tanker booking, supplier, delivery, and inventory modules using Fastify routes, controllers, and Mongoose models.
-• Developed JWT-secured, role-based workflows for 5 user roles: customers, operators, suppliers, delivery agents, and administrators.
-• Handled MQTT telemetry and emergency-event alerts from 50+ IoT tank sensors, processing and persisting readings in MongoDB; debugged and resolved telemetry data issues through MongoDB queries.
-• Integrated real-time updates, push notifications, file storage, and location services into backend booking and delivery flows.
-AI-Powered Prompt Suggestion Engine (Python, FastAPI, Redis, PostgreSQL, Gemini)
-• Built a real-time FastAPI service that uses spaCy NLP to turn partial user input into contextual keyword suggestions, responding in under 200 ms.
-• Implemented semantic retrieval with Sentence Transformers embeddings and PostgreSQL pgvector as the persistent vector store for context lookup.
-• Added Redis embedding and semantic caching with HNSW vector indexing to serve similar queries from cache, cutting Gemini 2.5 Flash Lite API calls by ~40%.
-
-PROJECTS
-AI Resume Tailor (Generative AI Web App) | JavaScript, Gemini API, Prompt Engineering, GitHub Pages
-• Built a Generative AI web app that tailors a resume to any job description using the Gemini API, with prompt-engineering rules that prevent invented skills and preserve every fact and metric.
-• Implemented automatic multi-model fallback with request timeouts and error handling for rate limits, unavailable models, and invalid API keys.
-• Added an ATS keyword-match analyzer covering 100+ skills with before/after scoring and an honesty check, plus PDF export; deployed as a mobile-installable app on GitHub Pages.
-Serverless E-Commerce Bookstore on AWS | Lambda, API Gateway, DynamoDB, S3, Cognito
-• Built a serverless e-commerce backend with AWS Lambda and API Gateway REST endpoints for book catalog, shopping cart, and order management, using DynamoDB for data persistence.
-• Secured user sign-up, login, and protected APIs with Amazon Cognito, and stored book cover images in Amazon S3.
-
-EDUCATION
-Bachelor of Technology in Computer Science
-Institute of Aeronautical Engineering, Hyderabad | 2021 – 2025`;
-
 const DEFAULT_MODELS = ["gemini-3.6-flash","gemini-3.5-flash","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-2.5-flash","gemini-2.5-flash-lite"];
 const API = "https://generativelanguage.googleapis.com/v1beta";
 const TIMEOUT_MS = 60000;
 const PAGE_CONTENT_IN = 11.69 - 1.1;
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
 
 const K=[["Node.js",["node.js","nodejs","node js"]],["Express.js",["express.js","expressjs","express"]],["Fastify",["fastify"]],["NestJS",["nestjs","nest.js"]],["FastAPI",["fastapi"]],["Django",["django"]],["Flask",["flask"]],["Spring Boot",["spring boot","spring"]],["Java",["java"]],["Python",["python"]],["JavaScript",["javascript"]],["TypeScript",["typescript"]],["Go",["golang"]],["C++",["c++"]],["C#",["c#"]],[".NET",[".net"]],["Kotlin",["kotlin"]],["Rust",["rust"]],["PHP",["php"]],["Laravel",["laravel"]],["Ruby on Rails",["ruby on rails","rails"]],["SQL",["sql"]],["NoSQL",["nosql"]],["MongoDB",["mongodb","mongo"]],["Mongoose",["mongoose"]],["PostgreSQL",["postgresql","postgres"]],["MySQL",["mysql"]],["Redis",["redis"]],["DynamoDB",["dynamodb"]],["Elasticsearch",["elasticsearch"]],["Kafka",["kafka"]],["RabbitMQ",["rabbitmq"]],["Celery",["celery"]],["MQTT",["mqtt"]],["GraphQL",["graphql"]],["REST APIs",["rest api","rest apis","restful"]],["gRPC",["grpc"]],["Microservices",["microservices","microservice"]],["Backend",["backend","back-end","back end"]],["Frontend",["frontend","front-end","front end"]],["Full stack",["full stack","full-stack","fullstack"]],["React",["react","react.js"]],["Angular",["angular"]],["Vue",["vue","vue.js"]],["Next.js",["next.js","nextjs"]],["Cloud",["cloud","cloud computing"]],["AWS",["aws","amazon web services"]],["Lambda",["lambda"]],["S3",["s3"]],["API Gateway",["api gateway"]],["Cognito",["cognito"]],["EC2",["ec2"]],["Azure",["azure"]],["GCP",["gcp","google cloud"]],["Serverless",["serverless"]],["Docker",["docker"]],["Kubernetes",["kubernetes","k8s"]],["Helm",["helm"]],["Terraform",["terraform"]],["Ansible",["ansible"]],["CI/CD",["ci/cd","cicd","ci cd"]],["Jenkins",["jenkins"]],["GitHub Actions",["github actions"]],["Git",["git","github","gitlab"]],["Linux",["linux"]],["Nginx",["nginx"]],["Monitoring",["monitoring","observability","prometheus","grafana"]],["Unit testing",["unit test","unit tests","unit testing"]],["Jest",["jest"]],["Pytest",["pytest"]],["Selenium",["selenium"]],["Playwright",["playwright"]],["Postman",["postman"]],["Swagger",["swagger","openapi spec"]],["System design",["system design"]],["DSA",["data structures","algorithms","dsa"]],["OOP",["oop","object-oriented","object oriented"]],["Design patterns",["design patterns"]],["Scalability",["scalability","scalable"]],["Performance optimization",["performance optimization","performance tuning","optimize","optimization"]],["Security",["security","secure coding"]],["JWT",["jwt"]],["OAuth",["oauth"]],["Authentication",["authentication","auth"]],["Caching",["caching","cache"]],["Real-time systems",["real-time","realtime","real time"]],["Event-driven",["event-driven","event driven"]],["IoT",["iot"]],["ETL",["etl","data pipeline","data pipelines"]],["Spark",["spark","pyspark"]],["Airflow",["airflow"]],["Pandas",["pandas"]],["NumPy",["numpy"]],["Power BI",["power bi"]],["Tableau",["tableau"]],["Excel",["excel"]],["Machine learning",["machine learning"]],["TensorFlow",["tensorflow"]],["PyTorch",["pytorch"]],["Hugging Face",["hugging face","huggingface"]],["Fine-tuning",["fine-tuning","fine tuning","finetuning"]],["MLOps",["mlops"]],["LLM",["llm","llms","large language model","large language models"]],["Generative AI",["generative ai","genai","gen ai"]],["RAG",["rag","retrieval-augmented","retrieval augmented"]],["AI agents",["ai agents","agentic","autogen","crewai"]],["LangChain",["langchain"]],["LlamaIndex",["llamaindex"]],["OpenAI",["openai"]],["Azure OpenAI",["azure openai"]],["Vertex AI",["vertex ai"]],["AWS Bedrock",["bedrock"]],["Gemini",["gemini"]],["Prompt engineering",["prompt engineering"]],["Vector database",["vector database","vector databases","vector db","pgvector","pinecone","faiss","chromadb","vector search"]],["Embeddings",["embedding","embeddings"]],["Semantic search",["semantic search"]],["NLP",["nlp","natural language processing"]],["Copilot",["copilot"]],["WebSockets",["websocket","websockets","socket.io"]],["Agile",["agile","scrum"]],["Debugging",["debugging","troubleshooting"]],["Problem solving",["problem solving","problem-solving"]],["Communication",["communication"]],["Collaboration",["collaboration","teamwork","team player"]]];
 
@@ -304,35 +321,34 @@ const ALIASES = Object.fromEntries(K);
 const EQ = Object.fromEntries(Object.entries(EQ_SRC).map(([l,a]) => [l, mk(a)]));
 
 const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
 const store = {get:k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const shortMsg = s => (s || '').split('\n')[0].slice(0, 90);
 const setStatus = (id, text, isErr) => { $(id).textContent = text; $(id).classList.toggle('err', !!isErr); };
-
-if (store.get('rt_resume_ver') !== RESUME_VERSION) {
-  const old = store.get('rt_resume');
-  if (old) store.set('rt_resume_backup', old);
-  store.set('rt_resume', DEFAULT_RESUME);
-  store.set('rt_resume_ver', RESUME_VERSION);
-}
+const cleanOut = s => s.replace(/^```[a-z]*\s*$/gim,'').replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
 
 const state = {view:'original', tailored:'', editing:false, histId:null};
-const baseResume = () => store.get('rt_resume') || DEFAULT_RESUME;
+const baseResume = () => store.get('rt_resume') || '';
 const currentText = () => state.view === 'tailored' ? state.tailored : baseResume();
 
-/* Settings and models */
+/* Guide and settings */
+function updateGuide(){
+  const hasKey = !!store.get('rt_key'), hasRes = !!baseResume().trim();
+  $('step1').classList.toggle('done', hasKey);
+  $('step2').classList.toggle('done', hasKey);
+  $('step3').classList.toggle('done', hasRes);
+  $('guide').hidden = hasKey && hasRes;
+}
+function openSettings(open){
+  $('settings').hidden = !open;
+  $('settingsBtn').setAttribute('aria-expanded', String(open));
+}
 function getModelList(){ try { return JSON.parse(store.get('rt_models') || 'null') || DEFAULT_MODELS; } catch(e) { return DEFAULT_MODELS; } }
 function fillModels(list, selected){
   $('model').innerHTML = list.map(m => `<option value="${escH(m)}">${escH(m)}</option>`).join('');
   if (selected && list.includes(selected)) $('model').value = selected;
 }
-function openSettings(open){
-  $('settings').hidden = !open;
-  $('settingsBtn').setAttribute('aria-expanded', String(open));
-  if (open && !$('apiKey').value) $('apiKey').focus();
-}
-function updateKeyUI(){ $('banner').hidden = !!store.get('rt_key'); }
-
 async function fetchModels(key){
   const r = await fetch(`${API}/models?pageSize=200`, {headers:{'x-goog-api-key':key}});
   let d = {}; try { d = await r.json(); } catch(e) {}
@@ -349,30 +365,199 @@ async function fetchModels(key){
   store.set('rt_model', $('model').value);
   return list;
 }
-async function loadModelsUI(){
-  const key = $('apiKey').value.trim();
-  if (!key) return setStatus('setMsg','Paste your API key first.', true);
-  setStatus('setMsg','Loading models…');
-  try { const list = await fetchModels(key); setStatus('setMsg', `Key works. ${list.length} models available.`); }
-  catch(e) { setStatus('setMsg','Could not load models: ' + e.message, true); }
+async function saveKey(key, msgId){
+  key = key.trim();
+  if (!key) return setStatus(msgId, 'Paste your API key first.', true);
+  setStatus(msgId, 'Checking your key…');
+  try {
+    const list = await fetchModels(key);
+    store.set('rt_key', key);
+    $('apiKey').value = key; $('guideKey').value = key;
+    setStatus(msgId, `Key works. ${list.length} models available.`);
+    updateGuide();
+  } catch(e) {
+    setStatus(msgId, /api[\s_-]?key/i.test(e.message) ? 'That key was rejected. Copy it again from Google AI Studio.' : 'Could not check the key: ' + e.message, true);
+  }
+}
+$('settingsBtn').onclick = () => openSettings($('settings').hidden);
+$('saveKey').onclick = () => saveKey($('apiKey').value, 'setMsg');
+$('guideSave').onclick = () => saveKey($('guideKey').value, 'guideKeyMsg');
+$('loadModels').onclick = () => saveKey($('apiKey').value, 'setMsg');
+$('model').onchange = () => store.set('rt_model', $('model').value);
+$('clearData').onclick = () => {
+  if (!confirm('Delete your API key, resume, and history from this browser?')) return;
+  try { Object.keys(localStorage).filter(k => k.startsWith('rt_')).forEach(k => localStorage.removeItem(k)); } catch(e) {}
+  location.reload();
+};
+
+/* AI calls with fallback */
+function orderModels(){
+  const sel = $('model').value;
+  const rank = n => (/pro/.test(n) ? 3 : /lite/.test(n) ? 1 : /flash/.test(n) ? 0 : 2) + (/(preview|exp)/.test(n) ? 0.5 : 0);
+  const rest = getModelList().filter(m => m !== sel).sort((a,b) => rank(a) - rank(b) || b.localeCompare(a, undefined, {numeric:true}));
+  return [sel, ...rest].filter(Boolean);
+}
+async function callModel(model, key, prompt){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(`${API}/models/${encodeURIComponent(model)}:generateContent`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
+      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.3}}),
+      signal: ctrl.signal
+    });
+    let d = {}; try { d = await r.json(); } catch(e) {}
+    if (!r.ok) { const err = new Error(d.error?.message || 'HTTP ' + r.status); err.status = r.status; throw err; }
+    const text = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    if (!text) { const err = new Error('Empty response'); err.status = 0; throw err; }
+    return text;
+  } catch(e) {
+    if (e.name === 'AbortError') { const err = new Error('No response in ' + TIMEOUT_MS/1000 + ' seconds'); err.status = 0; throw err; }
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.test(e.message);
+async function callWithFallback(prompt, onTry){
+  const key = (store.get('rt_key') || '').trim();
+  if (!key) throw new Error('Add your Gemini API key first. See step 2 at the top.');
+  if (navigator.onLine === false) throw new Error('You are offline. Connect to the internet and try again.');
+  if (!store.get('rt_models_loaded')) { try { await fetchModels(key); } catch(e) {} }
+  const models = orderModels(), failures = [];
+  for (let i = 0; i < models.length; i++) {
+    if (onTry) onTry(models[i], i + 1, models.length);
+    try {
+      const text = await callModel(models[i], key, prompt);
+      store.set('rt_model', models[i]); $('model').value = models[i];
+      return {text, used:models[i], failed:failures.length};
+    } catch(e) {
+      if (isKeyError(e)) throw new Error('Your API key was rejected. Check it in Settings.\n' + shortMsg(e.message));
+      failures.push(`${models[i]}: ${shortMsg(e.message)}`);
+    }
+  }
+  throw new Error(`All ${models.length} models failed. Your free-tier limit may be used up for today; try again later.\n\n` + failures.join('\n'));
 }
 
-$('settingsBtn').onclick = () => openSettings($('settings').hidden);
-$('bannerBtn').onclick = () => openSettings(true);
-$('saveKey').onclick = async () => {
-  const key = $('apiKey').value.trim();
-  if (!key) return setStatus('setMsg','Paste your API key first.', true);
-  store.set('rt_key', key); updateKeyUI();
-  await loadModelsUI();
-};
-$('loadModels').onclick = loadModelsUI;
-$('model').onchange = () => store.set('rt_model', $('model').value);
-$('resetResume').onclick = () => {
-  if (!confirm('Replace your saved resume with the built-in version?')) return;
-  store.set('rt_resume', DEFAULT_RESUME);
-  if (state.view === 'original' && state.editing) $('editor').value = DEFAULT_RESUME;
-  refreshMatch();
-  setStatus('setMsg','Resume reset to the built-in version.');
+/* Resume import */
+let pdfjsPromise = null;
+function loadPdfJs(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsPromise) pdfjsPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+    s.onerror = () => { pdfjsPromise = null; rej(new Error('Could not load the PDF reader. Check your internet connection.')); };
+    document.head.appendChild(s);
+  });
+  return pdfjsPromise;
+}
+async function pdfToText(file){
+  const lib = await loadPdfJs();
+  const pdf = await lib.getDocument({data: await file.arrayBuffer()}).promise;
+  const out = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    const rows = [];
+    for (const it of tc.items) {
+      if (!it.str || !it.str.trim()) continue;
+      const x = it.transform[4], y = it.transform[5];
+      let row = rows.find(r => Math.abs(r.y - y) < 3);
+      if (!row) { row = {y, items:[]}; rows.push(row); }
+      row.items.push({x, str:it.str, w:it.width || 0});
+    }
+    rows.sort((a,b) => b.y - a.y);
+    for (const r of rows) {
+      r.items.sort((a,b) => a.x - b.x);
+      let line = '', end = null;
+      for (const it of r.items) {
+        if (end !== null && it.x - end > 1.5 && !line.endsWith(' ') && !it.str.startsWith(' ')) line += ' ';
+        line += it.str; end = it.x + it.w;
+      }
+      out.push(line.replace(/\s+/g,' ').trim());
+    }
+    out.push('');
+  }
+  return out.join('\n');
+}
+function localTidy(text){
+  const lines = text.split('\n').map(l => l.replace(/^\s*[●▪◦■□➢►\-*]\s+/, '• ').replace(/^\s*o\s+(?=[A-Z])/, '• ').trimEnd());
+  const out = [];
+  for (const l of lines) {
+    const prev = out[out.length - 1];
+    if (prev && prev.startsWith('• ') && l && !l.startsWith('• ') && /^[a-z(]/.test(l)) out[out.length - 1] = prev + ' ' + l.trim();
+    else out.push(l);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+const tidyPrompt = text => `Convert this resume text into a clean plain-text format. It may have been extracted from a PDF, so lines can be broken or slightly out of order.
+
+Rules:
+- Do not change, add, remove or reword any content. Only fix the layout and line breaks.
+- Line 1: the person's full name. Line 2: all contact details on one line, separated by " • ".
+- Section headings in CAPITALS on their own line, using the resume's own sections (for example PROFESSIONAL SUMMARY, SKILLS, EXPERIENCE, PROJECTS, EDUCATION, CERTIFICATIONS).
+- Every bullet starts with "• " and stays on one line; join bullets that were broken across lines.
+- Job titles, company and date lines, project headings and education lines each on their own line.
+- Skill lines look like "• Category: item, item".
+- Plain text only: no markdown, no asterisks, no # symbols, no comments. Output only the formatted resume.
+
+RESUME TEXT:
+${text}`;
+
+function notifyResume(text, isErr){
+  setStatus('guideResMsg', text, isErr);
+  $('sheetMsg').textContent = text; $('sheetMsg').classList.toggle('over', !!isErr);
+}
+async function aiTidy(text){
+  const r = await callWithFallback(tidyPrompt(text), m => notifyResume(`Formatting with ${m}…`));
+  return cleanOut(r.text);
+}
+function openEditorWith(text, message){
+  store.set('rt_resume', text);
+  if (state.view !== 'original') setView('original');
+  toggleEdit(true);
+  $('editor').value = text;
+  updateGuide();
+  if (message) notifyResume(message);
+}
+async function handleUpload(file){
+  if (!file) return;
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return notifyResume('Choose a PDF file.', true);
+  $$('.uploadBtn').forEach(b => b.setAttribute('aria-busy','true'));
+  notifyResume('Reading your PDF…');
+  try {
+    let text = localTidy(await pdfToText(file));
+    if (text.replace(/\s/g,'').length < 80) throw new Error('This PDF has no readable text. It may be a scanned image. Use Paste text instead.');
+    let note = 'Check your resume text, fix anything that looks off, then tap Done.';
+    if (store.get('rt_key')) {
+      try { text = await aiTidy(text); }
+      catch(e) { note = 'AI formatting was not available, so basic formatting was used. Check the text, then tap Done.\n' + shortMsg(e.message); }
+    } else note = 'Basic formatting applied. Add your API key, then tap Tidy with AI for cleaner formatting. Tap Done when it looks right.';
+    openEditorWith(text, note);
+    $('sheetcol').scrollIntoView({behavior:'smooth', block:'start'});
+  } catch(e) {
+    notifyResume(e.message, true);
+  } finally {
+    $$('.uploadBtn').forEach(b => b.removeAttribute('aria-busy'));
+    $('fileInput').value = '';
+  }
+}
+$$('.uploadBtn').forEach(b => b.onclick = () => $('fileInput').click());
+$('fileInput').onchange = e => handleUpload(e.target.files[0]);
+$$('.pasteResumeBtn').forEach(b => b.onclick = () => {
+  if (state.view !== 'original') setView('original');
+  toggleEdit(true);
+  notifyResume('Paste your resume in the box, tap Tidy with AI, then tap Done.');
+  $('sheetcol').scrollIntoView({behavior:'smooth', block:'start'});
+});
+$('tidyBtn').onclick = async () => {
+  const text = $('editor').value.trim();
+  if (text.length < 50) return notifyResume('Paste your resume text first.', true);
+  const btn = $('tidyBtn'); btn.setAttribute('aria-busy','true'); btn.textContent = 'Tidying…';
+  try {
+    const out = await aiTidy(text);
+    $('editor').value = out; store.set('rt_resume', out); updateGuide();
+    notifyResume('Formatted. Check it, then tap Done.');
+  } catch(e) { notifyResume(e.message, true); }
+  finally { btn.removeAttribute('aria-busy'); btn.textContent = 'Tidy with AI'; }
 };
 
 /* Matching */
@@ -389,9 +574,7 @@ function analyze(jd, rs){
     score: t ? Math.round(hit.length / t * 100) : 0,
     potential: t ? Math.round((hit.length + equiv.length) / t * 100) : 0};
 }
-
 const group = (title, arr, cls, hint) => arr.length ? `<div class="group"><p class="gt">${title}<span class="gn">${arr.length}</span>${hint ? `<span class="gh">${hint}</span>` : ''}</p><div>${arr.map(x => `<span class="chip ${cls}">${escH(x)}</span>`).join('')}</div></div>` : '';
-
 function renderMatch(a){
   const who = state.view === 'tailored' ? 'Tailored resume' : 'Your resume';
   if (a.total === 0) { $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">No common skill keywords found in this job description. Tailoring will still adapt your wording to it.</p>'; return; }
@@ -407,12 +590,12 @@ function renderMatch(a){
     group('Can add honestly', a.equiv, 'eq', 'Your resume already proves these under another name.') +
     group('Missing', a.miss, 'miss', 'Add only the ones you have actually used.');
 }
-
 let matchTimer;
 function refreshMatch(){
-  const jd = $('jd').value.trim();
-  if (jd.length < 50) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Paste a job description to see how well your resume matches it.</p>';
-  else renderMatch(analyze(jd, currentText()));
+  const jd = $('jd').value.trim(), text = currentText();
+  if (!text.trim()) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Add your resume to see how well it matches a job.</p>';
+  else if (jd.length < 50) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Paste a job description to see how well your resume matches it.</p>';
+  else renderMatch(analyze(jd, text));
   renderPaper(false);
 }
 function updateCount(){
@@ -438,13 +621,12 @@ function resumeToHtml(text){
     close();
     if (l.length < 45 && l === l.toUpperCase() && /[A-Z]/.test(l)) { section = l; seenHeading = true; html += `<h2>${escH(l)}</h2>`; continue; }
     if (!seenHeading) { html += `<p class="c">${escH(l)}</p>`; continue; }
-    const strong = /^(EXPERIENCE|PROJECTS|EDUCATION)$/.test(section) && !/\b(19|20)\d{2}\b/.test(l);
+    const strong = /^(EXPERIENCE|WORK EXPERIENCE|PROFESSIONAL EXPERIENCE|PROJECTS|EDUCATION|INTERNSHIPS?)$/.test(section) && !/\b(19|20)\d{2}\b/.test(l);
     html += strong ? `<p><b>${escH(l)}</b></p>` : `<p>${escH(l)}</p>`;
   }
   close();
   return html;
 }
-
 function highlight(root, labels){
   const als = labels.flatMap(l => ALIASES[l] || []).sort((a,b) => b.length - a.length);
   if (!als.length) return;
@@ -467,7 +649,6 @@ function highlight(root, labels){
     n.replaceWith(frag);
   }
 }
-
 function fitPaper(){
   const wrap = $('sheetWrap'), paper = $('paper');
   if (wrap.hidden) return;
@@ -479,17 +660,18 @@ function fitPaper(){
   $('sheetMsg').textContent = over ? 'Runs past one page. Shorten a bullet or two before downloading.' : 'Fits on one page.';
   $('sheetMsg').classList.toggle('over', over);
 }
-
 function renderPaper(fresh){
   if (state.editing) return;
-  const text = currentText();
+  const text = currentText(), empty = !text.trim();
+  $('emptySheet').hidden = !empty;
+  $('sheetWrap').hidden = empty;
+  if (empty) { $('sheetMsg').textContent = ''; return; }
   $('paperContent').innerHTML = resumeToHtml(text);
   const jd = $('jd').value.trim();
   if ($('hlToggle').checked && jd.length >= 50) highlight($('paperContent'), analyze(jd, text).hit);
   fitPaper();
   if (fresh) { const p = $('paper'); p.classList.remove('fresh'); void p.offsetWidth; p.classList.add('fresh'); }
 }
-
 function setView(v, fresh){
   if (state.editing) toggleEdit(false);
   state.view = v;
@@ -498,20 +680,20 @@ function setView(v, fresh){
   refreshMatch();
   if (fresh) renderPaper(true);
 }
-
 function toggleEdit(on){
   state.editing = on;
   $('editor').hidden = !on;
   $('sheetWrap').hidden = on;
+  if (on) $('emptySheet').hidden = true;
+  $('tidyBtn').hidden = !(on && state.view === 'original');
   $('editBtn').textContent = on ? 'Done' : 'Edit';
   if (on) {
     $('editor').value = currentText();
-    $('sheetMsg').textContent = state.view === 'tailored' ? 'Editing the tailored version for this job.' : 'Editing your base resume. Changes save automatically.';
+    $('sheetMsg').textContent = state.view === 'tailored' ? 'Editing the tailored version for this job.' : 'Editing your resume. Changes save automatically.';
     $('sheetMsg').classList.remove('over');
     $('editor').focus();
-  } else refreshMatch();
+  } else { updateGuide(); refreshMatch(); }
 }
-
 $('viewOrig').onclick = () => setView('original');
 $('viewTail').onclick = () => setView('tailored');
 $('hlToggle').onchange = () => renderPaper(false);
@@ -523,7 +705,7 @@ $('editor').oninput = () => {
     if (state.histId) { const h = getHist(); const e = h.find(x => x.id === state.histId); if (e) { e.text = v; setHist(h); } }
   } else store.set('rt_resume', v);
   clearTimeout(matchTimer); matchTimer = setTimeout(() => {
-    const jd = $('jd').value.trim(); if (jd.length >= 50) renderMatch(analyze(jd, v));
+    const jd = $('jd').value.trim(); if (jd.length >= 50 && v.trim()) renderMatch(analyze(jd, v));
   }, 300);
 };
 
@@ -548,34 +730,6 @@ $('pasteBtn').onclick = async () => {
 $('clearBtn').onclick = () => { $('jd').value = ''; $('jd').oninput(); $('jd').focus(); };
 
 /* Tailoring */
-function orderModels(){
-  const sel = $('model').value;
-  const rank = n => (/pro/.test(n) ? 3 : /lite/.test(n) ? 1 : /flash/.test(n) ? 0 : 2) + (/(preview|exp)/.test(n) ? 0.5 : 0);
-  const rest = getModelList().filter(m => m !== sel).sort((a,b) => rank(a) - rank(b) || b.localeCompare(a, undefined, {numeric:true}));
-  return [sel, ...rest].filter(Boolean);
-}
-
-async function callModel(model, key, prompt){
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  try {
-    const r = await fetch(`${API}/models/${encodeURIComponent(model)}:generateContent`, {
-      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
-      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.3}}),
-      signal: ctrl.signal
-    });
-    let d = {}; try { d = await r.json(); } catch(e) {}
-    if (!r.ok) { const err = new Error(d.error?.message || 'HTTP ' + r.status); err.status = r.status; throw err; }
-    const text = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
-    if (!text) { const err = new Error('Empty response'); err.status = 0; throw err; }
-    return text;
-  } catch(e) {
-    if (e.name === 'AbortError') { const err = new Error('No response in ' + TIMEOUT_MS/1000 + ' seconds'); err.status = 0; throw err; }
-    throw e;
-  } finally { clearTimeout(timer); }
-}
-const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.test(e.message);
-
 function buildPrompt(jd, rs, a){
   const role = $('role').value.trim(), co = $('company').value.trim();
   return `You are an expert resume writer and ATS specialist. Tailor the candidate's resume to the job description below. This must work for any role, so follow the job description's own language rather than a fixed template.
@@ -583,13 +737,13 @@ function buildPrompt(jd, rs, a){
 Strict rules:
 1. Keep the same sections, in the same order and with the same headings, as the candidate's resume. It must still fit on one page.
 2. Never invent anything. Keep every company, job title, date, project, feature, technology, metric and number exactly as given. Do not add tools, skills, responsibilities or experience that the resume does not already show.
-3. Do not exaggerate. Keep the strength of each claim: do not upgrade verbs (for example "Built" must not become "Architected", "Led", "Spearheaded" or "Owned"), and never describe the candidate as an expert, senior or lead.
+3. Do not exaggerate. Keep the strength of each claim: do not upgrade verbs (for example "Built" must not become "Architected", "Led", "Spearheaded" or "Owned"), and never describe the candidate as an expert, senior or lead unless the resume already does.
 4. Do not change what a technology does, and do not remove details. Every bullet in the original must still be present (rewording is fine), including every feature and tool it mentions.
 5. Use the job's exact wording where the resume already proves the skill. These job terms are honestly supported by the resume, so add them in the job's exact wording where they fit naturally (summary, skills, or the bullet that proves them): ${a.equiv.join(', ') || 'none'}.
 6. Rewrite the summary in 2-3 lines for this role, using only job terms the candidate genuinely has.
 7. Reorder skills within each category so the job's skills come first, and reorder bullets and blocks so the most relevant ones come first. Keep the existing skill categories and never merge unrelated items into one category. You may rename a category only if the new name is accurate.
 8. Start every bullet with a strong but accurate action verb. Keep each bullet under about 30 words.
-9. Output plain text only. No markdown, no asterisks, no # symbols. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep job titles, company lines, project headings and education lines on their own lines as in the original.
+9. Output plain text only. No markdown, no asterisks, no # symbols. Keep the name on line 1 and contact details on line 2. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep job titles, company lines, project headings and education lines on their own lines as in the original.
 10. After the resume, write a line containing only ===NOTES=== and then: (a) 3-5 short lines on what you changed, (b) important job skills that are still missing, so the candidate can decide whether they genuinely have them.
 
 ${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}Job keywords still missing (do NOT add these): ${a.miss.join(', ') || 'none'}
@@ -600,7 +754,6 @@ ${jd}
 RESUME:
 ${rs}`;
 }
-
 function honestyCheck(orig, out){
   const warn = [];
   const risky = ["architected","spearheaded","led","headed","orchestrated","pioneered","owned","expert","senior","lead","mentored","managed a team"];
@@ -610,10 +763,9 @@ function honestyCheck(orig, out){
   const a = nums(orig), b = nums(out);
   const lost = [...a].filter(x => !b.has(x)), extra = [...b].filter(x => !a.has(x));
   if (lost.length) warn.push('Numbers from your resume that are missing now: ' + lost.join(', '));
-  if (extra.length) warn.push('New numbers that are not in your base resume: ' + extra.join(', '));
+  if (extra.length) warn.push('New numbers that are not in your resume: ' + extra.join(', '));
   return warn;
 }
-
 function showResult(e){
   $('resultPanel').hidden = false;
   $('resultSummary').innerHTML = `Keyword match went from <b>${e.before}%</b> to <b>${e.after}%</b>. Read every line before sending; you need to be able to explain it in an interview.`;
@@ -622,39 +774,25 @@ function showResult(e){
   else $('warnOut').hidden = true;
   if (e.notes) { $('notes').textContent = e.notes; $('notesBox').hidden = false; } else $('notesBox').hidden = true;
 }
-
 $('tailorBtn').onclick = async () => {
   const btn = $('tailorBtn');
   if (btn.getAttribute('aria-busy') === 'true') return;
-  const key = (store.get('rt_key') || $('apiKey').value || '').trim();
-  if (!key) { openSettings(true); setStatus('setMsg','Add your Gemini API key here first, then tap Tailor resume again.', true); window.scrollTo({top:0, behavior:'smooth'}); return; }
-  const jd = $('jd').value.trim(), rs = baseResume().trim();
+  if (!store.get('rt_key')) { updateGuide(); setStatus('status','Add your Gemini API key first. See step 2 at the top.', true); $('guide').scrollIntoView({behavior:'smooth'}); return; }
+  const rs = baseResume().trim();
+  if (rs.length < 100) { setStatus('status','Add your resume first: upload a PDF or paste the text.', true); updateGuide(); $('guide').scrollIntoView({behavior:'smooth'}); return; }
+  const jd = $('jd').value.trim();
   if (jd.length < 50) { $('jdMsg').textContent = 'Paste the full job description first.'; $('jd').focus(); return; }
-  if (rs.length < 100) { setStatus('status','Your base resume looks empty. Reset it in Settings.', true); return; }
-  if (navigator.onLine === false) { setStatus('status','You are offline. Connect to the internet and try again.', true); return; }
+  if (state.editing) toggleEdit(false);
 
   const before = analyze(jd, rs);
   btn.setAttribute('aria-busy','true'); btn.textContent = 'Tailoring…'; setStatus('status','');
   try {
-    if (!store.get('rt_models_loaded')) { setStatus('status','Loading your models…'); try { await fetchModels(key); } catch(e) {} }
-    const models = orderModels(), prompt = buildPrompt(jd, rs, before), failures = [];
-    let text = '', used = '';
-    for (let i = 0; i < models.length; i++) {
-      setStatus('status', `Writing with ${models[i]} (${i+1} of ${models.length})`);
-      try { text = await callModel(models[i], key, prompt); used = models[i]; break; }
-      catch(e) {
-        if (isKeyError(e)) throw new Error('Your API key was rejected. Check it in Settings.\n' + shortMsg(e.message));
-        failures.push(`${models[i]}: ${shortMsg(e.message)}`);
-      }
-    }
-    if (!text) throw new Error(`All ${models.length} models failed. Your free-tier limit may be used up for today; try again later.\n\n` + failures.join('\n'));
-
-    store.set('rt_model', used); $('model').value = used;
-    const [resPart, notesPart] = text.split('===NOTES===');
-    const clean = resPart.replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+    const r = await callWithFallback(buildPrompt(jd, rs, before), (m, i, n) => setStatus('status', `Writing with ${m} (${i} of ${n})`));
+    const [resPart, notesPart] = r.text.split('===NOTES===');
+    const clean = cleanOut(resPart);
     const after = analyze(jd, clean);
     const entry = {id:Date.now(), date:new Date().toISOString(), role:$('role').value.trim(), company:$('company').value.trim(), jd,
-      before:before.score, after:after.score, text:clean, notes:(notesPart || '').trim(), warns:honestyCheck(rs, clean), used, failed:failures.length};
+      before:before.score, after:after.score, text:clean, notes:(notesPart || '').trim(), warns:honestyCheck(rs, clean), used:r.used, failed:r.failed};
     const h = getHist(); h.unshift(entry); setHist(h); renderHistory();
     state.tailored = clean; state.histId = entry.id;
     $('viewTail').hidden = false;
@@ -703,15 +841,16 @@ $('historyList').onclick = ev => {
 /* Copy and PDF */
 $('copyBtn').onclick = async () => {
   const text = state.editing ? $('editor').value : currentText();
+  if (!text.trim()) return notifyResume('Nothing to copy yet.', true);
   try { await navigator.clipboard.writeText(text); $('sheetMsg').textContent = 'Copied.'; }
   catch(e) { $('sheetMsg').textContent = 'Copy was blocked. Tap Edit, select the text, and copy it manually.'; }
   $('sheetMsg').classList.remove('over');
 };
 $('pdfBtn').onclick = () => {
   const text = (state.editing ? $('editor').value : currentText()).trim();
-  if (!text) return;
-  const name = (text.split('\n')[0] || 'Resume').trim().replace(/\s+/g,'_');
-  const co = state.view === 'tailored' ? $('company').value.trim().replace(/\s+/g,'_') : '';
+  if (!text) return notifyResume('Add your resume first.', true);
+  const name = (text.split('\n')[0] || 'Resume').trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_');
+  const co = state.view === 'tailored' ? $('company').value.trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_') : '';
   const oldTitle = document.title;
   document.title = name + '_Resume' + (co ? '_' + co : '');
   $('printArea').innerHTML = resumeToHtml(text);
@@ -721,8 +860,9 @@ $('pdfBtn').onclick = () => {
 
 /* Start */
 $('apiKey').value = store.get('rt_key') || '';
+$('guideKey').value = store.get('rt_key') || '';
 fillModels(getModelList(), store.get('rt_model'));
-updateKeyUI(); updateCount(); renderHistory(); refreshMatch();
+updateGuide(); updateCount(); renderHistory(); refreshMatch();
 window.addEventListener('resize', fitPaper);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => renderPaper(false));
 </script>
