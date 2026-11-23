@@ -1,0 +1,388 @@
+index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Resume Tailor">
+<title>Resume Tailor</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1d1f23;--muted:#5f6670;--border:#e2e5ea;--accent:#2563eb;--ok-bg:#e7f6ec;--ok:#1e7a3c;--warn-bg:#fdf1dc;--warn:#8a5a00;--err:#c62828}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:14px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+textarea{resize:vertical;line-height:1.45}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inline{display:flex;gap:8px}
+.inline>*:first-child{flex:1}
+button{font:inherit;font-size:14px;padding:10px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;white-space:nowrap}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.6;cursor:wait}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.msg{font-size:13px;margin:6px 0 0;min-height:1em;white-space:pre-line}
+.msg.err{color:var(--err)}.msg.ok{color:var(--ok)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.metric{background:var(--bg);border-radius:8px;padding:12px}
+.metric span{display:block;font-size:12px;color:var(--muted)}
+.metric b{font-size:22px}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:6px;margin:0 6px 6px 0}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.miss{background:var(--warn-bg);color:var(--warn)}
+.small{font-size:13px;color:var(--muted);margin:8px 0}
+.hidden{display:none}
+pre.notes{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;font:inherit;font-size:14px;margin:12px 0 0}
+#printArea{display:none}
+@media(max-width:600px){
+  main{padding:16px 12px 48px}
+  .row,.metrics{grid-template-columns:1fr}
+  .inline{flex-direction:column}
+  input,select,textarea{font-size:16px}
+  .actions button{flex:1 1 100%;padding:12px}
+}
+@media print{
+  @page{size:A4;margin:0.55in 0.6in}
+  body{background:#fff}
+  main{display:none!important}
+  #printArea{display:block;font-family:Calibri,Carlito,Arial,sans-serif;font-size:10.5pt;color:#000;line-height:1.3}
+  #printArea h1{font-size:18pt;text-align:center;margin:0 0 2px;letter-spacing:.5px}
+  #printArea .c{text-align:center;margin:0 0 4px}
+  #printArea h2{font-size:11pt;border-bottom:1px solid #000;margin:9px 0 4px;padding-bottom:1px;letter-spacing:.5px}
+  #printArea p{margin:2px 0}
+  #printArea ul{margin:2px 0 4px;padding-left:16px}
+  #printArea li{margin:1px 0}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Resume Tailor</h1>
+<p class="sub">Paste a job description, check your keyword match, and get a tailored resume.</p>
+
+<section class="card">
+<h2>1. Settings</h2>
+<label for="apiKey">Gemini API key (stored only in this browser)</label>
+<div class="inline"><input id="apiKey" type="password" placeholder="Paste your key from Google AI Studio" autocomplete="off"><button id="saveKey">Save key</button></div>
+<label for="model">Preferred model (others are tried automatically if it fails)</label>
+<div class="inline"><select id="model"></select><button id="loadModels">Refresh models</button></div>
+<p class="msg" id="setMsg"></p>
+</section>
+
+<section class="card">
+<h2>2. Your base resume</h2>
+<textarea id="resume" rows="14"></textarea>
+<div class="actions"><button id="resetResume">Restore original</button></div>
+<p class="small">Changes save automatically in this browser.</p>
+</section>
+
+<section class="card">
+<h2>3. Job details</h2>
+<div class="row">
+<div><label for="role">Target role (optional)</label><input id="role" placeholder="Backend Developer"></div>
+<div><label for="company">Company (optional)</label><input id="company" placeholder="Zoho"></div>
+</div>
+<label for="jd">Job description</label>
+<textarea id="jd" rows="10" placeholder="Paste the full job description here"></textarea>
+<div class="actions"><button id="checkBtn">Check match</button><button id="tailorBtn" class="primary">Tailor my resume</button></div>
+<p class="msg" id="jdMsg"></p>
+</section>
+
+<section class="card hidden" id="matchCard">
+<h2>Keyword match</h2>
+<div id="matchOut"></div>
+</section>
+
+<section class="card hidden" id="resultCard">
+<h2>Tailored resume</h2>
+<p class="small" id="afterOut"></p>
+<textarea id="output" rows="24"></textarea>
+<div class="actions"><button id="copyBtn">Copy text</button><button id="pdfBtn" class="primary">Download PDF</button></div>
+<p class="msg" id="outMsg"></p>
+<pre class="notes hidden" id="notes"></pre>
+</section>
+</main>
+<div id="printArea"></div>
+
+<script>
+const DEFAULT_RESUME = `RITHVIK PRATAPANI
++91-9063172924 • rithvik.pratapani03@gmail.com • linkedin.com/in/rithvik-pratapani
+
+PROFESSIONAL SUMMARY
+Backend Software Developer with 1+ year of experience building Node.js/Fastify and Python/FastAPI services for an IoT water-management platform. Built an LLM-powered prompt suggestion engine using Sentence Transformers, PostgreSQL pgvector, Redis vector caching, and Gemini, focused on low-latency APIs and reduced LLM cost.
+
+SKILLS
+• Languages: JavaScript, Python, SQL
+• Backend & APIs: Node.js, Fastify, FastAPI, REST API Design, JWT Authentication, Role-Based Access Control
+• Databases & Caching: MongoDB (Mongoose), PostgreSQL (pgvector), Redis (Vector Search)
+• AI & LLM Integration: NLP (spaCy), Sentence Transformers, Semantic Search, Vector Indexing (HNSW), Gemini API
+• Cloud & Messaging: AWS (Lambda, API Gateway, DynamoDB, S3, Cognito), MQTT
+• Tools: Git, GitHub, Docker, SQLAlchemy
+
+EXPERIENCE
+Junior Software Developer
+Arminta Solutions Private Limited | Hyderabad | Sep 2025 – Present
+Water Management Platform (Node.js, Fastify, MongoDB, Mongoose, MQTT)
+• Built and maintained 40+ REST API endpoints across tank monitoring, tanker booking, supplier, delivery, and inventory modules using Fastify routes, controllers, and Mongoose models.
+• Developed JWT-secured, role-based workflows for 5 user roles: customers, operators, suppliers, delivery agents, and administrators.
+• Handled MQTT telemetry and emergency-event alerts from 50+ IoT tank sensors, processing and persisting readings in MongoDB; traced and resolved telemetry data issues through MongoDB queries.
+• Integrated real-time updates, push notifications, file storage, and location services into backend booking and delivery flows.
+AI-Powered Prompt Suggestion Engine (Python, FastAPI, Redis, PostgreSQL, Gemini)
+• Built a real-time FastAPI service that uses spaCy NLP to turn partial user input into contextual keyword suggestions, responding in under 200 ms.
+• Implemented semantic retrieval with Sentence Transformers embeddings and PostgreSQL pgvector as the persistent vector store for context lookup.
+• Added Redis embedding and semantic caching with HNSW vector indexing to serve similar queries from cache, cutting Gemini 2.5 Flash Lite API calls by ~40%.
+
+PROJECTS
+Serverless E-Commerce Bookstore on AWS | Lambda, API Gateway, DynamoDB, S3, Cognito
+• Built a serverless e-commerce backend with AWS Lambda and API Gateway REST endpoints for book catalog, shopping cart, and order management, using DynamoDB for data persistence.
+• Secured user sign-up, login, and protected APIs with Amazon Cognito, and stored book cover images in Amazon S3.
+
+EDUCATION
+Bachelor of Technology in Computer Science
+Institute of Aeronautical Engineering, Hyderabad | 2021 – 2025`;
+
+const DEFAULT_MODELS = ["gemini-3.5-flash","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-2.5-flash","gemini-2.5-flash-lite"];
+const API = "https://generativelanguage.googleapis.com/v1beta";
+const TIMEOUT_MS = 60000;
+
+const K=[["Node.js",["node.js","nodejs","node js"]],["Express.js",["express.js","expressjs","express"]],["Fastify",["fastify"]],["NestJS",["nestjs","nest.js"]],["FastAPI",["fastapi"]],["Django",["django"]],["Flask",["flask"]],["Spring Boot",["spring boot","spring"]],["Java",["java"]],["Python",["python"]],["JavaScript",["javascript"]],["TypeScript",["typescript"]],["Go",["golang"]],["C++",["c++"]],["C#",["c#"]],[".NET",[".net"]],["SQL",["sql"]],["NoSQL",["nosql"]],["MongoDB",["mongodb","mongo"]],["Mongoose",["mongoose"]],["PostgreSQL",["postgresql","postgres"]],["MySQL",["mysql"]],["Redis",["redis"]],["DynamoDB",["dynamodb"]],["Elasticsearch",["elasticsearch"]],["Kafka",["kafka"]],["RabbitMQ",["rabbitmq"]],["MQTT",["mqtt"]],["GraphQL",["graphql"]],["REST APIs",["rest api","rest apis","restful"]],["gRPC",["grpc"]],["Microservices",["microservices","microservice"]],["AWS",["aws","amazon web services"]],["Lambda",["lambda"]],["S3",["s3"]],["API Gateway",["api gateway"]],["Cognito",["cognito"]],["EC2",["ec2"]],["Azure",["azure"]],["GCP",["gcp","google cloud"]],["Serverless",["serverless"]],["Docker",["docker"]],["Kubernetes",["kubernetes","k8s"]],["CI/CD",["ci/cd","cicd","ci cd"]],["Jenkins",["jenkins"]],["GitHub Actions",["github actions"]],["Git",["git","github","gitlab"]],["Linux",["linux"]],["Terraform",["terraform"]],["Unit testing",["unit test","unit tests","unit testing"]],["Jest",["jest"]],["Pytest",["pytest"]],["System design",["system design"]],["DSA",["data structures","algorithms","dsa"]],["JWT",["jwt"]],["OAuth",["oauth"]],["Authentication",["authentication","auth"]],["Caching",["caching","cache"]],["LLM",["llm","llms","large language model"]],["Generative AI",["generative ai","genai","gen ai"]],["RAG",["rag","retrieval-augmented","retrieval augmented"]],["Vector database",["vector database","vector db","pgvector","pinecone","faiss","vector search"]],["Embeddings",["embedding","embeddings"]],["NLP",["nlp","natural language processing"]],["Machine learning",["machine learning"]],["LangChain",["langchain"]],["OpenAI",["openai"]],["Gemini",["gemini"]],["Prompt engineering",["prompt engineering"]],["Semantic search",["semantic search"]],["WebSockets",["websocket","websockets","socket.io"]],["IoT",["iot"]],["Agile",["agile","scrum"]],["Pandas",["pandas"]],["TensorFlow",["tensorflow"]],["PyTorch",["pytorch"]],["React",["react","react.js"]],["Nginx",["nginx"]],["SQLAlchemy",["sqlalchemy"]],["Postman",["postman"]],["Swagger",["swagger","openapi"]],["Debugging",["debugging","troubleshooting"]]];
+const esc = s => s.replace(/[.*+?^${}()|[\]\\\/#]/g,'\\$&');
+const RX = K.map(([l,a]) => [l, new RegExp('(?:^|[^a-z0-9])(?:'+a.map(esc).join('|')+')(?![a-z0-9])','i')]);
+
+const $ = id => document.getElementById(id);
+const store = {get:k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const msg = (id,text,type) => { $(id).textContent = text; $(id).className = 'msg ' + (type||''); };
+const escH = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const shortMsg = s => (s || '').split('\n')[0].slice(0, 90);
+
+function getModelList(){ return JSON.parse(store.get('rt_models') || 'null') || DEFAULT_MODELS; }
+function fillModels(list, selected){
+  $('model').innerHTML = list.map(m => `<option value="${escH(m)}">${escH(m)}</option>`).join('');
+  if (selected && list.includes(selected)) $('model').value = selected;
+}
+
+$('apiKey').value = store.get('rt_key') || '';
+fillModels(getModelList(), store.get('rt_model'));
+$('resume').value = store.get('rt_resume') || DEFAULT_RESUME;
+
+$('model').onchange = () => store.set('rt_model', $('model').value);
+$('resume').oninput = () => store.set('rt_resume', $('resume').value);
+$('jd').oninput = () => msg('jdMsg','');
+$('resetResume').onclick = () => { if (confirm('Replace your base resume with the original version?')) { $('resume').value = DEFAULT_RESUME; store.set('rt_resume', DEFAULT_RESUME); } };
+
+async function fetchModels(key){
+  const r = await fetch(`${API}/models?pageSize=200`, {headers:{'x-goog-api-key':key}});
+  let d = {}; try { d = await r.json(); } catch(e) {}
+  if (!r.ok) throw new Error(d.error?.message || 'HTTP ' + r.status);
+  const list = (d.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+    .map(m => m.name.replace('models/',''))
+    .filter(n => n.includes('gemini') && !/(embed|image|tts|audio|live|vision|robotics|computer-use)/.test(n));
+  if (!list.length) throw new Error('No text models found for this key.');
+  list.sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
+  store.set('rt_models', JSON.stringify(list));
+  store.set('rt_models_loaded', '1');
+  fillModels(list, store.get('rt_model'));
+  store.set('rt_model', $('model').value);
+  return list;
+}
+
+async function loadModelsUI(){
+  const key = $('apiKey').value.trim();
+  if (!key) return msg('setMsg','Paste your API key first.','err');
+  msg('setMsg','Loading models…');
+  try { const list = await fetchModels(key); msg('setMsg', `${list.length} models loaded. If one fails, the others are tried automatically.`, 'ok'); }
+  catch(e) { msg('setMsg','Could not load models: ' + e.message, 'err'); }
+}
+
+$('saveKey').onclick = async () => {
+  const key = $('apiKey').value.trim();
+  if (!key) return msg('setMsg','Paste your API key first.','err');
+  store.set('rt_key', key);
+  await loadModelsUI();
+};
+$('loadModels').onclick = loadModelsUI;
+
+function orderModels(){
+  const sel = $('model').value;
+  const rank = n => (/pro/.test(n) ? 3 : /lite/.test(n) ? 1 : /flash/.test(n) ? 0 : 2) + (/(preview|exp)/.test(n) ? 0.5 : 0);
+  const rest = getModelList().filter(m => m !== sel)
+    .sort((a,b) => rank(a) - rank(b) || b.localeCompare(a, undefined, {numeric:true}));
+  return [sel, ...rest].filter(Boolean);
+}
+
+async function callModel(model, key, prompt){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(`${API}/models/${encodeURIComponent(model)}:generateContent`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-goog-api-key':key},
+      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.4}}),
+      signal: ctrl.signal
+    });
+    let d = {}; try { d = await r.json(); } catch(e) {}
+    if (!r.ok) { const err = new Error(d.error?.message || 'HTTP ' + r.status); err.status = r.status; throw err; }
+    const text = (d.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    if (!text) { const err = new Error('Empty response'); err.status = 0; throw err; }
+    return text;
+  } catch(e) {
+    if (e.name === 'AbortError') { const err = new Error('No response in ' + TIMEOUT_MS/1000 + ' seconds'); err.status = 0; throw err; }
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+
+const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.test(e.message);
+
+function analyze(jd, rs){
+  const inJd = RX.filter(([,r]) => r.test(jd));
+  const hit = inJd.filter(([,r]) => r.test(rs)).map(x => x[0]);
+  const miss = inJd.filter(([,r]) => !r.test(rs)).map(x => x[0]);
+  return {hit, miss, total: inJd.length, score: inJd.length ? Math.round(hit.length / inJd.length * 100) : 0};
+}
+
+function renderMatch(a){
+  const color = a.score >= 75 ? 'var(--ok)' : a.score >= 50 ? 'var(--warn)' : 'var(--err)';
+  const tip = a.total === 0 ? 'No common tech keywords found in this job description.'
+    : a.score >= 75 ? 'Strong match. Tailoring will mostly sharpen the wording.'
+    : a.score >= 50 ? 'Decent match. Tailoring should lift it noticeably.'
+    : 'Low match. Check whether this role really fits your skills.';
+  $('matchOut').innerHTML =
+    `<div class="metrics"><div class="metric"><span>Keyword match</span><b style="color:${color}">${a.score}%</b></div>
+     <div class="metric"><span>Job keywords found</span><b>${a.total}</b></div>
+     <div class="metric"><span>Missing from resume</span><b>${a.miss.length}</b></div></div>
+     <p class="small">${tip}</p>` +
+    (a.hit.length ? `<p class="small">Already in your resume</p><div>${a.hit.map(h=>`<span class="chip ok">${escH(h)}</span>`).join('')}</div>` : '') +
+    (a.miss.length ? `<p class="small">Missing. Add only the ones you have actually used.</p><div>${a.miss.map(h=>`<span class="chip miss">${escH(h)}</span>`).join('')}</div>` : '');
+  $('matchCard').classList.remove('hidden');
+}
+
+function validate(){
+  if ($('jd').value.trim().length < 50) { msg('jdMsg','Paste the full job description first.','err'); return false; }
+  if ($('resume').value.trim().length < 100) { msg('jdMsg','Your base resume looks empty. Tap Restore original.','err'); return false; }
+  return true;
+}
+
+$('checkBtn').onclick = () => { if (validate()) { msg('jdMsg',''); renderMatch(analyze($('jd').value, $('resume').value)); } };
+
+function buildPrompt(jd, rs, miss){
+  const role = $('role').value.trim(), co = $('company').value.trim();
+  return `You are an expert technical resume writer and ATS specialist. Tailor the candidate's resume to the job description below.
+
+Strict rules:
+1. Keep the same sections in the same order: header (name and contact line), PROFESSIONAL SUMMARY, SKILLS, EXPERIENCE, PROJECTS, EDUCATION. It must fit on one page.
+2. Never invent anything. Keep every company, job title, date, project, metric and number exactly as given. Do not add tools, skills or experience that are not already in the resume.
+3. Rewrite the PROFESSIONAL SUMMARY in 2-3 lines for the target role, using the job description's key terms that the candidate genuinely has.
+4. Reorder SKILLS so the skills the job asks for come first. You may rename a skill to the job's exact wording only when it means the same thing (for example "REST API Design" to "RESTful APIs").
+5. Reword bullets to use the job description's terminology where it honestly fits, and move the most relevant bullets to the top of each block. Start every bullet with a strong action verb. Keep each bullet under about 30 words.
+6. Output plain text only. No markdown, no asterisks, no # symbols. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep the job title, company line, project sub-headings and education lines on their own lines exactly as in the original layout.
+7. After the resume, write a line containing only ===NOTES=== and then: (a) 3-5 short lines on what you changed, (b) the job's important skills that are missing from the resume, so the candidate can decide whether they genuinely have them.
+
+${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}Job keywords missing from the resume: ${miss.join(', ') || 'none'}
+
+JOB DESCRIPTION:
+${jd}
+
+RESUME:
+${rs}`;
+}
+
+$('tailorBtn').onclick = async () => {
+  if (!validate()) return;
+  const key = $('apiKey').value.trim();
+  if (!key) return msg('jdMsg','Add your Gemini API key in Settings first.','err');
+  if (navigator.onLine === false) return msg('jdMsg','You are offline. Connect to the internet and try again.','err');
+  store.set('rt_key', key);
+
+  const jd = $('jd').value.trim(), rs = $('resume').value.trim();
+  const before = analyze(jd, rs);
+  renderMatch(before);
+
+  const btn = $('tailorBtn'); btn.disabled = true; msg('jdMsg','');
+  try {
+    if (!store.get('rt_models_loaded')) { btn.textContent = 'Loading models…'; try { await fetchModels(key); } catch(e) {} }
+    const models = orderModels();
+    const prompt = buildPrompt(jd, rs, before.miss);
+    const failures = [];
+    let text = '', used = '';
+
+    for (let i = 0; i < models.length; i++) {
+      const m = models[i];
+      btn.textContent = `Trying ${m} (${i+1} of ${models.length})…`;
+      try { text = await callModel(m, key, prompt); used = m; break; }
+      catch(e) {
+        if (isKeyError(e)) throw new Error('Your API key was rejected. Check it in Settings.\n' + shortMsg(e.message));
+        failures.push(`${m}: ${shortMsg(e.message)}`);
+      }
+    }
+    if (!text) throw new Error('All ' + models.length + ' models failed. Your free-tier limit may be used up for today; try again later.\n\n' + failures.join('\n'));
+
+    store.set('rt_model', used); $('model').value = used;
+    const [resPart, notesPart] = text.split('===NOTES===');
+    const clean = resPart.replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+    $('output').value = clean;
+    const after = analyze(jd, clean);
+    $('afterOut').textContent = `Keyword match: ${before.score}% before → ${after.score}% after. Made with ${used}` +
+      (failures.length ? ` (skipped ${failures.length} model${failures.length > 1 ? 's' : ''} that failed)` : '') +
+      '. Review every line before sending; you must be able to explain it in an interview.';
+    if (notesPart && notesPart.trim()) { $('notes').textContent = notesPart.trim(); $('notes').classList.remove('hidden'); }
+    else $('notes').classList.add('hidden');
+    $('resultCard').classList.remove('hidden');
+    $('resultCard').scrollIntoView({behavior:'smooth'});
+  } catch(e) {
+    msg('jdMsg', e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tailor my resume';
+  }
+};
+
+$('copyBtn').onclick = async () => {
+  try { await navigator.clipboard.writeText($('output').value); }
+  catch(e) { $('output').select(); document.execCommand('copy'); }
+  msg('outMsg','Copied.','ok');
+};
+
+function resumeToHtml(text){
+  let html = '', inList = false, first = true, seenHeading = false, section = '';
+  const close = () => { if (inList) { html += '</ul>'; inList = false; } };
+  for (const raw of text.split('\n')) {
+    const l = raw.trim();
+    if (!l) { close(); continue; }
+    if (first) { html += `<h1>${escH(l)}</h1>`; first = false; continue; }
+    if (/^[•\-–*]\s+/.test(l)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      let t = escH(l.replace(/^[•\-–*]\s+/,''));
+      const i = t.indexOf(':');
+      if (section === 'SKILLS' && i > 0 && i < 40) t = '<b>' + t.slice(0, i + 1) + '</b>' + t.slice(i + 1);
+      html += `<li>${t}</li>`; continue;
+    }
+    close();
+    if (l.length < 45 && l === l.toUpperCase() && /[A-Z]/.test(l)) { section = l; seenHeading = true; html += `<h2>${escH(l)}</h2>`; continue; }
+    if (!seenHeading) { html += `<p class="c">${escH(l)}</p>`; continue; }
+    const strong = /^(EXPERIENCE|PROJECTS|EDUCATION)$/.test(section) && !/\b(19|20)\d{2}\b/.test(l);
+    html += strong ? `<p><b>${escH(l)}</b></p>` : `<p>${escH(l)}</p>`;
+  }
+  close();
+  return html;
+}
+
+$('pdfBtn').onclick = () => {
+  const text = $('output').value.trim();
+  if (!text) return msg('outMsg','Nothing to download yet.','err');
+  const name = (text.split('\n')[0] || 'Resume').trim().replace(/\s+/g,'_');
+  const co = $('company').value.trim().replace(/\s+/g,'_');
+  const oldTitle = document.title;
+  document.title = name + '_Resume' + (co ? '_' + co : '');
+  $('printArea').innerHTML = resumeToHtml(text);
+  window.addEventListener('afterprint', () => { document.title = oldTitle; }, {once:true});
+  window.print();
+};
+</script>
+</body>
+</html>
