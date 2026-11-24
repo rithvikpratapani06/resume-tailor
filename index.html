@@ -26,7 +26,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input,select,textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
 textarea{resize:vertical;line-height:1.5}
-label{font-size:13px;color:var(--soft);display:block;margin:0 0 6px}
+label,.lbl{font-size:13px;color:var(--soft);display:block;margin:0 0 6px}
 button{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:9px 14px;font-size:14px;font-weight:500;white-space:nowrap}
 button:hover{border-color:var(--soft)}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -59,6 +59,12 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .layout{max-width:1240px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:24px;align-items:start}
 .work{display:grid;gap:16px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.resbox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:1.5px dashed var(--line);border-radius:10px;padding:12px 14px;transition:border-color .15s,background .15s}
+.resbox.has{border-style:solid}
+.resbox.drag{border-color:var(--accent);background:var(--eq-bg)}
+.resname{display:block;font-weight:600;word-break:break-word}
+.ressub{display:block;font-size:13px;color:var(--soft)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .jdhead{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:14px}
 .tools{display:flex;gap:6px;margin-bottom:6px}
@@ -84,7 +90,7 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .chip.eq{background:var(--eq-bg);color:var(--eq)}
 .chip.miss{background:var(--warn-bg);color:var(--warn)}
 .actionbar{display:grid;gap:8px}
-.status{font-size:13px;color:var(--soft);min-height:1.2em;white-space:pre-line}
+.status{font-size:13px;color:var(--soft);min-height:1.2em;white-space:pre-line;margin-top:6px}
 .status.err{color:var(--err)}
 .meta{font-size:13px;color:var(--soft);margin-top:8px}
 .warn{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px;white-space:pre-line}
@@ -111,8 +117,8 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 .paper{background:#fff;color:#1a1a1a;width:8.27in;min-height:11.69in;padding:.55in .6in;transform-origin:top left;position:relative;box-shadow:0 1px 2px rgba(22,35,58,.08),0 14px 36px rgba(22,35,58,.16)}
 .pageline{position:absolute;left:0;right:0;top:11.14in;border-top:2px dashed #B3261E}
 .pageline span{position:absolute;right:.6in;top:-11px;background:#B3261E;color:#fff;font:600 11px/1 "Schibsted Grotesk",sans-serif;padding:5px 8px;border-radius:4px}
-.emptysheet{background:var(--panel);border:1.5px dashed var(--line);border-radius:14px;padding:28px 22px;text-align:left}
-.emptysheet p{color:var(--soft);font-size:14px;margin-bottom:14px}
+.emptysheet{background:var(--panel);border:1.5px dashed var(--line);border-radius:14px;padding:28px 22px}
+.emptysheet p{color:var(--soft);font-size:14px}
 .fmt{background:var(--desk);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;margin-top:16px;color:var(--ink)}
 .editor{min-height:70vh;font-size:14px}
 .sheet{font-family:Carlito,Calibri,Arial,sans-serif;font-size:10.5pt;line-height:1.3;color:#000}
@@ -125,13 +131,14 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 .sheet mark{background:var(--hl);color:inherit;padding:0 1px;border-radius:2px}
 .fresh #paperContent{animation:ink .5s ease-out}
 @keyframes ink{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.fresh #paperContent{animation:none}}
+@media (prefers-reduced-motion:reduce){.fresh #paperContent{animation:none}.resbox{transition:none}}
 #printArea{display:none}
 [hidden]{display:none!important}
 @media (max-width:980px){
   .layout{grid-template-columns:minmax(0,1fr)}
   .sheetcol{position:static;max-height:none;overflow:visible}
   .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .actionbar .status{margin-top:0}
   body{padding-bottom:110px}
 }
 @media (max-width:600px){
@@ -158,7 +165,7 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
 
 <div class="wrapx">
   <section id="guide" class="guide" hidden aria-labelledby="guideTitle">
-    <h3 id="guideTitle">Get set up in 3 minutes</h3>
+    <h3 id="guideTitle">One-time setup</h3>
     <p class="stepb" style="margin:0">Do this once on each phone or laptop you use.</p>
     <ol>
       <li id="step1"><span class="stepn">1</span><div>
@@ -171,14 +178,8 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
         <div class="inline" style="margin-top:6px"><input id="guideKey" type="password" placeholder="Paste your API key" autocomplete="off" aria-label="Gemini API key"><button id="guideSave" class="primary">Save key</button></div>
         <p class="status" id="guideKeyMsg" role="status" aria-live="polite"></p>
       </div></li>
-      <li id="step3"><span class="stepn">3</span><div>
-        <p class="stept">Add your resume</p>
-        <p class="stepb">Upload your resume PDF, or paste the text. The app formats it for you.</p>
-        <div class="btnrow"><button class="primary sm uploadBtn">Upload PDF</button><button class="sm pasteResumeBtn">Paste text</button></div>
-        <p class="status" id="guideResMsg" role="status" aria-live="polite"></p>
-      </div></li>
     </ol>
-    <p class="private">Your key and resume stay in this browser only. The person who shared this link can't see them.</p>
+    <p class="private">Your key, resume, and history stay in this browser only. The person who shared this link can't see them.</p>
   </section>
 
   <section id="settings" class="settings" hidden aria-label="Settings">
@@ -193,14 +194,24 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
       <p class="hint">If this model fails, every other model is tried automatically.</p>
     </div>
     <p class="status" id="setMsg" role="status" aria-live="polite"></p>
-    <div class="btnrow"><button class="sm uploadBtn">Upload a new resume PDF</button><button id="clearData" class="ghost sm danger">Delete my data from this browser</button></div>
+    <div class="btnrow"><button id="clearData" class="ghost sm danger">Delete my data from this browser</button></div>
   </section>
 </div>
 
 <main class="layout">
   <div class="work">
     <section class="panel" aria-labelledby="jobTitle">
-      <h2 id="jobTitle">Job</h2>
+      <div class="panelhead"><h2 id="jobTitle">Resume and job</h2><button id="newJobBtn" class="ghost sm">New job</button></div>
+
+      <div style="margin-top:14px">
+        <span class="lbl">Resume</span>
+        <div id="resBox" class="resbox">
+          <div><span id="resName" class="resname">No resume added yet</span><span id="resSub" class="ressub">Upload your resume PDF, or paste the text.</span></div>
+          <div class="btnrow"><button id="resUploadBtn" class="primary sm uploadBtn">Upload PDF</button><button class="ghost sm pasteResumeBtn">Paste text</button></div>
+        </div>
+        <p class="status" id="resMsg" role="status" aria-live="polite"></p>
+      </div>
+
       <div class="row2">
         <div><label for="role">Role</label><input id="role" placeholder="Python Developer"></div>
         <div><label for="company">Company</label><input id="company" placeholder="Infosys"></div>
@@ -241,23 +252,22 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
   <div class="sheetcol" id="sheetcol" aria-label="Resume preview">
     <div class="sheetbar">
       <div class="seg" role="tablist" aria-label="Which resume to show">
-        <button id="viewOrig" role="tab" aria-selected="true">Your resume</button>
+        <button id="viewOrig" role="tab" aria-selected="true">Uploaded resume</button>
         <button id="viewTail" role="tab" aria-selected="false" hidden>Tailored</button>
       </div>
       <div class="sheetactions">
         <label class="toggle"><input type="checkbox" id="hlToggle" checked>Highlight keywords</label>
         <button id="tidyBtn" class="sm" hidden>Tidy with AI</button>
-        <button class="ghost sm uploadBtn">Upload PDF</button>
+        <button id="editBtn" class="ghost sm">Edit</button>
         <button id="copyBtn" class="ghost sm">Copy</button>
         <button id="pdfBtn" class="primary sm">Download PDF</button>
       </div>
     </div>
     <p id="sheetMsg" class="sheetmsg" role="status" aria-live="polite"></p>
     <div id="emptySheet" class="emptysheet" hidden>
-      <h3>Add your resume</h3>
-      <p>Upload your current resume as a PDF, or paste its text. You only do this once on each device.</p>
-      <div class="btnrow"><button class="primary uploadBtn">Upload PDF</button><button class="pasteResumeBtn">Paste text</button></div>
-      <div class="fmt">If you type or paste it yourself, use this format, or tap Tidy with AI after pasting:
+      <h3>Your resume appears here</h3>
+      <p>Upload a resume PDF in the Resume box, or paste its text. The tailored version will show here too, exactly as the PDF will look.</p>
+      <div class="fmt">If you paste text, tap Tidy with AI to format it, or use this layout:
 YOUR NAME
 phone • email • linkedin
 
@@ -275,7 +285,7 @@ Company | City | Jan 2024 – Present
     <div id="sheetWrap" class="sheetwrap">
       <div id="paper" class="paper sheet"><div id="paperContent"></div><div id="pageLine" class="pageline" hidden><span>Page 2 starts here</span></div></div>
     </div>
-    <textarea id="editor" class="editor" hidden aria-label="Edit resume text" placeholder="Paste your resume here, then tap Tidy with AI to format it."></textarea>
+    <textarea id="editor" class="editor" hidden aria-label="Edit resume text" placeholder="Paste the resume here, then tap Tidy with AI to format it."></textarea>
   </div>
 </main>
 
@@ -332,13 +342,26 @@ const state = {view:'original', tailored:'', editing:false, histId:null};
 const baseResume = () => store.get('rt_resume') || '';
 const currentText = () => state.view === 'tailored' ? state.tailored : baseResume();
 
-/* Guide and settings */
+/* Setup, resume box and settings */
+function updateResumeField(){
+  const r = baseResume().trim();
+  $('resBox').classList.toggle('has', !!r);
+  if (r) {
+    $('resName').textContent = store.get('rt_resume_name') || 'Pasted resume';
+    $('resSub').textContent = r.split('\n')[0].trim() + '. Upload another PDF to replace it.';
+    $('resUploadBtn').textContent = 'Replace PDF';
+  } else {
+    $('resName').textContent = 'No resume added yet';
+    $('resSub').textContent = 'Upload your resume PDF, or paste the text.';
+    $('resUploadBtn').textContent = 'Upload PDF';
+  }
+}
 function updateGuide(){
-  const hasKey = !!store.get('rt_key'), hasRes = !!baseResume().trim();
+  const hasKey = !!store.get('rt_key');
   $('step1').classList.toggle('done', hasKey);
   $('step2').classList.toggle('done', hasKey);
-  $('step3').classList.toggle('done', hasRes);
-  $('guide').hidden = hasKey && hasRes;
+  $('guide').hidden = hasKey;
+  updateResumeField();
 }
 function openSettings(open){
   $('settings').hidden = !open;
@@ -419,7 +442,7 @@ async function callModel(model, key, prompt){
 const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.test(e.message);
 async function callWithFallback(prompt, onTry){
   const key = (store.get('rt_key') || '').trim();
-  if (!key) throw new Error('Add your Gemini API key first. See step 2 at the top.');
+  if (!key) throw new Error('Add your Gemini API key first. See the setup steps at the top.');
   if (navigator.onLine === false) throw new Error('You are offline. Connect to the internet and try again.');
   if (!store.get('rt_models_loaded')) { try { await fetchModels(key); } catch(e) {} }
   const models = orderModels(), failures = [];
@@ -437,7 +460,7 @@ async function callWithFallback(prompt, onTry){
   throw new Error(`All ${models.length} models failed. Your free-tier limit may be used up for today; try again later.\n\n` + failures.join('\n'));
 }
 
-/* Resume import */
+/* Resume upload and paste */
 let pdfjsPromise = null;
 function loadPdfJs(){
   if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
@@ -502,37 +525,38 @@ Rules:
 RESUME TEXT:
 ${text}`;
 
-function notifyResume(text, isErr){
-  setStatus('guideResMsg', text, isErr);
-  $('sheetMsg').textContent = text; $('sheetMsg').classList.toggle('over', !!isErr);
-}
+const notifyResume = (text, isErr) => setStatus('resMsg', text, isErr);
 async function aiTidy(text){
   const r = await callWithFallback(tidyPrompt(text), m => notifyResume(`Formatting with ${m}…`));
   return cleanOut(r.text);
 }
-function openEditorWith(text, message){
+function resetTailored(){
+  state.tailored = ''; state.histId = null;
+  $('viewTail').hidden = true; $('resultPanel').hidden = true;
+  setStatus('status','');
+}
+function setResume(text, name){
   store.set('rt_resume', text);
-  if (state.view !== 'original') setView('original');
-  toggleEdit(true);
-  $('editor').value = text;
-  updateGuide();
-  if (message) notifyResume(message);
+  store.set('rt_resume_name', name);
+  resetTailored();
+  setView('original', true);
+  updateResumeField();
 }
 async function handleUpload(file){
   if (!file) return;
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return notifyResume('Choose a PDF file.', true);
   $$('.uploadBtn').forEach(b => b.setAttribute('aria-busy','true'));
-  notifyResume('Reading your PDF…');
+  notifyResume('Reading ' + file.name + '…');
   try {
     let text = localTidy(await pdfToText(file));
     if (text.replace(/\s/g,'').length < 80) throw new Error('This PDF has no readable text. It may be a scanned image. Use Paste text instead.');
-    let note = 'Check your resume text, fix anything that looks off, then tap Done.';
+    let note = 'Resume loaded. Check it in the preview; tap Edit there to fix anything.';
     if (store.get('rt_key')) {
       try { text = await aiTidy(text); }
-      catch(e) { note = 'AI formatting was not available, so basic formatting was used. Check the text, then tap Done.\n' + shortMsg(e.message); }
-    } else note = 'Basic formatting applied. Add your API key, then tap Tidy with AI for cleaner formatting. Tap Done when it looks right.';
-    openEditorWith(text, note);
-    $('sheetcol').scrollIntoView({behavior:'smooth', block:'start'});
+      catch(e) { note = 'Resume loaded with basic formatting, because AI formatting was not available. Check it in the preview.'; }
+    } else note = 'Resume loaded with basic formatting. Add your API key for cleaner formatting.';
+    setResume(text, file.name);
+    notifyResume(note);
   } catch(e) {
     notifyResume(e.message, true);
   } finally {
@@ -542,19 +566,29 @@ async function handleUpload(file){
 }
 $$('.uploadBtn').forEach(b => b.onclick = () => $('fileInput').click());
 $('fileInput').onchange = e => handleUpload(e.target.files[0]);
+const rb = $('resBox');
+['dragenter','dragover'].forEach(ev => rb.addEventListener(ev, e => { e.preventDefault(); rb.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => rb.addEventListener(ev, e => { e.preventDefault(); rb.classList.remove('drag'); }));
+rb.addEventListener('drop', e => handleUpload(e.dataTransfer.files[0]));
+
 $$('.pasteResumeBtn').forEach(b => b.onclick = () => {
+  resetTailored();
   if (state.view !== 'original') setView('original');
   toggleEdit(true);
-  notifyResume('Paste your resume in the box, tap Tidy with AI, then tap Done.');
+  $('editor').value = '';
+  $('sheetMsg').textContent = 'Paste the resume here, tap Tidy with AI, then tap Done.';
+  notifyResume('Paste the resume in the box next to the preview, then tap Done.');
   $('sheetcol').scrollIntoView({behavior:'smooth', block:'start'});
 });
 $('tidyBtn').onclick = async () => {
   const text = $('editor').value.trim();
-  if (text.length < 50) return notifyResume('Paste your resume text first.', true);
+  if (text.length < 50) return notifyResume('Paste the resume text first.', true);
   const btn = $('tidyBtn'); btn.setAttribute('aria-busy','true'); btn.textContent = 'Tidying…';
   try {
     const out = await aiTidy(text);
-    $('editor').value = out; store.set('rt_resume', out); updateGuide();
+    $('editor').value = out; store.set('rt_resume', out);
+    if (!store.get('rt_resume_name')) store.set('rt_resume_name', 'Pasted resume');
+    updateResumeField();
     notifyResume('Formatted. Check it, then tap Done.');
   } catch(e) { notifyResume(e.message, true); }
   finally { btn.removeAttribute('aria-busy'); btn.textContent = 'Tidy with AI'; }
@@ -576,25 +610,25 @@ function analyze(jd, rs){
 }
 const group = (title, arr, cls, hint) => arr.length ? `<div class="group"><p class="gt">${title}<span class="gn">${arr.length}</span>${hint ? `<span class="gh">${hint}</span>` : ''}</p><div>${arr.map(x => `<span class="chip ${cls}">${escH(x)}</span>`).join('')}</div></div>` : '';
 function renderMatch(a){
-  const who = state.view === 'tailored' ? 'Tailored resume' : 'Your resume';
-  if (a.total === 0) { $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">No common skill keywords found in this job description. Tailoring will still adapt your wording to it.</p>'; return; }
-  const tip = a.potential >= 75 ? 'Strong fit. Tailoring should bring your score close to the potential.'
+  const who = state.view === 'tailored' ? 'Tailored resume' : 'Uploaded resume';
+  if (a.total === 0) { $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">No common skill keywords found in this job description. Tailoring will still adapt the wording to it.</p>'; return; }
+  const tip = a.potential >= 75 ? 'Strong fit. Tailoring should bring the score close to the potential.'
     : a.potential >= 50 ? 'Decent fit. Tailoring will add the honest equivalents.'
-    : 'Low fit. Check whether this role really matches your skills before applying.';
+    : 'Low fit. Check whether this role really matches the resume before applying.';
   $('matchBody').innerHTML =
     `<div class="scoreline"><div><span class="score">${a.score}%</span><span class="scorelbl">${who}, keyword match</span></div>
      <div class="potential"><b>${a.potential}%</b><br>honest potential</div></div>
      <div class="meter" role="img" aria-label="Keyword match ${a.score} percent, honest potential ${a.potential} percent"><div class="pot" style="width:${a.potential}%"></div><div class="fill" style="width:${a.score}%"></div></div>
      <p class="tip">${tip}</p>` +
-    group('In your resume', a.hit, 'ok') +
-    group('Can add honestly', a.equiv, 'eq', 'Your resume already proves these under another name.') +
+    group('In the resume', a.hit, 'ok') +
+    group('Can add honestly', a.equiv, 'eq', 'The resume already proves these under another name.') +
     group('Missing', a.miss, 'miss', 'Add only the ones you have actually used.');
 }
 let matchTimer;
 function refreshMatch(){
   const jd = $('jd').value.trim(), text = currentText();
-  if (!text.trim()) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Add your resume to see how well it matches a job.</p>';
-  else if (jd.length < 50) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Paste a job description to see how well your resume matches it.</p>';
+  if (!text.trim()) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Upload a resume and paste a job description to see how well they match.</p>';
+  else if (jd.length < 50) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Paste a job description to see how well the resume matches it.</p>';
   else renderMatch(analyze(jd, text));
   renderPaper(false);
 }
@@ -615,13 +649,13 @@ function resumeToHtml(text){
       if (!inList) { html += '<ul>'; inList = true; }
       let t = escH(l.replace(/^[•\-–*]\s+/,''));
       const i = t.indexOf(':');
-      if (section === 'SKILLS' && i > 0 && i < 45) t = '<b>' + t.slice(0, i + 1) + '</b>' + t.slice(i + 1);
+      if (/SKILL/.test(section) && i > 0 && i < 45) t = '<b>' + t.slice(0, i + 1) + '</b>' + t.slice(i + 1);
       html += `<li>${t}</li>`; continue;
     }
     close();
     if (l.length < 45 && l === l.toUpperCase() && /[A-Z]/.test(l)) { section = l; seenHeading = true; html += `<h2>${escH(l)}</h2>`; continue; }
     if (!seenHeading) { html += `<p class="c">${escH(l)}</p>`; continue; }
-    const strong = /^(EXPERIENCE|WORK EXPERIENCE|PROFESSIONAL EXPERIENCE|PROJECTS|EDUCATION|INTERNSHIPS?)$/.test(section) && !/\b(19|20)\d{2}\b/.test(l);
+    const strong = /(EXPERIENCE|PROJECTS|EDUCATION|INTERNSHIP)/.test(section) && !/\b(19|20)\d{2}\b/.test(l);
     html += strong ? `<p><b>${escH(l)}</b></p>` : `<p>${escH(l)}</p>`;
   }
   close();
@@ -689,10 +723,10 @@ function toggleEdit(on){
   $('editBtn').textContent = on ? 'Done' : 'Edit';
   if (on) {
     $('editor').value = currentText();
-    $('sheetMsg').textContent = state.view === 'tailored' ? 'Editing the tailored version for this job.' : 'Editing your resume. Changes save automatically.';
+    $('sheetMsg').textContent = state.view === 'tailored' ? 'Editing the tailored version for this job.' : 'Editing the uploaded resume. Changes save automatically.';
     $('sheetMsg').classList.remove('over');
     $('editor').focus();
-  } else { updateGuide(); refreshMatch(); }
+  } else { updateResumeField(); refreshMatch(); }
 }
 $('viewOrig').onclick = () => setView('original');
 $('viewTail').onclick = () => setView('tailored');
@@ -703,7 +737,10 @@ $('editor').oninput = () => {
   if (state.view === 'tailored') {
     state.tailored = v;
     if (state.histId) { const h = getHist(); const e = h.find(x => x.id === state.histId); if (e) { e.text = v; setHist(h); } }
-  } else store.set('rt_resume', v);
+  } else {
+    store.set('rt_resume', v);
+    if (!store.get('rt_resume_name')) store.set('rt_resume_name', 'Pasted resume');
+  }
   clearTimeout(matchTimer); matchTimer = setTimeout(() => {
     const jd = $('jd').value.trim(); if (jd.length >= 50 && v.trim()) renderMatch(analyze(jd, v));
   }, 300);
@@ -728,6 +765,12 @@ $('pasteBtn').onclick = async () => {
   } catch(e) { $('jdMsg').textContent = 'Your browser blocked the Paste button. Long-press the box and choose Paste instead.'; }
 };
 $('clearBtn').onclick = () => { $('jd').value = ''; $('jd').oninput(); $('jd').focus(); };
+$('newJobBtn').onclick = () => {
+  ['role','company','jd'].forEach(id => { $(id).value = ''; store.set('rt_' + id, ''); });
+  $('jdMsg').textContent = ''; updateCount();
+  resetTailored(); setView('original');
+  $('role').focus();
+};
 
 /* Tailoring */
 function buildPrompt(jd, rs, a){
@@ -762,8 +805,8 @@ function honestyCheck(orig, out){
   const nums = s => new Set((s.match(/\d+(?:\.\d+)?%?\+?/g) || []));
   const a = nums(orig), b = nums(out);
   const lost = [...a].filter(x => !b.has(x)), extra = [...b].filter(x => !a.has(x));
-  if (lost.length) warn.push('Numbers from your resume that are missing now: ' + lost.join(', '));
-  if (extra.length) warn.push('New numbers that are not in your resume: ' + extra.join(', '));
+  if (lost.length) warn.push('Numbers from the resume that are missing now: ' + lost.join(', '));
+  if (extra.length) warn.push('New numbers that are not in the resume: ' + extra.join(', '));
   return warn;
 }
 function showResult(e){
@@ -777,9 +820,9 @@ function showResult(e){
 $('tailorBtn').onclick = async () => {
   const btn = $('tailorBtn');
   if (btn.getAttribute('aria-busy') === 'true') return;
-  if (!store.get('rt_key')) { updateGuide(); setStatus('status','Add your Gemini API key first. See step 2 at the top.', true); $('guide').scrollIntoView({behavior:'smooth'}); return; }
+  if (!store.get('rt_key')) { updateGuide(); setStatus('status','Add your Gemini API key first. See the setup steps at the top.', true); window.scrollTo({top:0, behavior:'smooth'}); return; }
   const rs = baseResume().trim();
-  if (rs.length < 100) { setStatus('status','Add your resume first: upload a PDF or paste the text.', true); updateGuide(); $('guide').scrollIntoView({behavior:'smooth'}); return; }
+  if (rs.length < 100) { setStatus('status','Upload a resume first.', true); notifyResume('Upload a resume PDF or paste the text here.', true); $('resBox').scrollIntoView({behavior:'smooth', block:'center'}); return; }
   const jd = $('jd').value.trim();
   if (jd.length < 50) { $('jdMsg').textContent = 'Paste the full job description first.'; $('jd').focus(); return; }
   if (state.editing) toggleEdit(false);
@@ -833,7 +876,7 @@ $('historyList').onclick = ev => {
   if (delId) {
     if (!confirm('Delete this tailored resume?')) return;
     setHist(getHist().filter(x => String(x.id) !== delId));
-    if (String(state.histId) === delId) { state.histId = null; state.tailored = ''; $('viewTail').hidden = true; $('resultPanel').hidden = true; setView('original'); }
+    if (String(state.histId) === delId) { resetTailored(); setView('original'); }
     renderHistory();
   }
 };
@@ -841,14 +884,14 @@ $('historyList').onclick = ev => {
 /* Copy and PDF */
 $('copyBtn').onclick = async () => {
   const text = state.editing ? $('editor').value : currentText();
-  if (!text.trim()) return notifyResume('Nothing to copy yet.', true);
+  if (!text.trim()) { $('sheetMsg').textContent = 'Nothing to copy yet.'; return; }
   try { await navigator.clipboard.writeText(text); $('sheetMsg').textContent = 'Copied.'; }
   catch(e) { $('sheetMsg').textContent = 'Copy was blocked. Tap Edit, select the text, and copy it manually.'; }
   $('sheetMsg').classList.remove('over');
 };
 $('pdfBtn').onclick = () => {
   const text = (state.editing ? $('editor').value : currentText()).trim();
-  if (!text) return notifyResume('Add your resume first.', true);
+  if (!text) { $('sheetMsg').textContent = 'Upload a resume first.'; return; }
   const name = (text.split('\n')[0] || 'Resume').trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_');
   const co = state.view === 'tailored' ? $('company').value.trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_') : '';
   const oldTitle = document.title;
