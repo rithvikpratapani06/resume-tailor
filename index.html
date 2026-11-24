@@ -71,6 +71,7 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .count{font-size:12px;color:var(--soft);margin-top:6px}
 .fieldmsg{font-size:13px;color:var(--err);margin-top:6px}
 .empty{color:var(--soft);font-size:14px}
+.legend{font-size:12px;color:var(--soft);margin-top:4px}
 .scoreline{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:12px 0 10px}
 .score{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1}
 .scorelbl{display:block;font-size:13px;color:var(--soft);margin-top:4px}
@@ -86,9 +87,13 @@ button[aria-busy="true"]{opacity:.75;cursor:progress}
 .gn{color:var(--soft);font-weight:500;margin-left:4px}
 .gh{display:block;font-weight:400;color:var(--soft);font-size:12px}
 .chip{display:inline-block;font-size:13px;padding:3px 10px;border-radius:999px;margin:0 6px 6px 0}
+.chip.req{font-weight:700}
 .chip.ok{background:var(--ok-bg);color:var(--ok)}
 .chip.eq{background:var(--eq-bg);color:var(--eq)}
 .chip.miss{background:var(--warn-bg);color:var(--warn)}
+.chip.pick{display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:var(--warn-bg);color:var(--warn);margin:0 6px 6px 0}
+.chip.pick input{width:auto;margin:0;accent-color:var(--eq)}
+.chip.pick.on{background:var(--eq-bg);color:var(--eq)}
 .actionbar{display:grid;gap:8px}
 .status{font-size:13px;color:var(--soft);min-height:1.2em;white-space:pre-line;margin-top:6px}
 .status.err{color:var(--err)}
@@ -202,7 +207,6 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
   <div class="work">
     <section class="panel" aria-labelledby="jobTitle">
       <div class="panelhead"><h2 id="jobTitle">Resume and job</h2><button id="newJobBtn" class="ghost sm">New job</button></div>
-
       <div style="margin-top:14px">
         <span class="lbl">Resume</span>
         <div id="resBox" class="resbox">
@@ -211,7 +215,6 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
         </div>
         <p class="status" id="resMsg" role="status" aria-live="polite"></p>
       </div>
-
       <div class="row2">
         <div><label for="role">Role</label><input id="role" placeholder="Python Developer"></div>
         <div><label for="company">Company</label><input id="company" placeholder="Infosys"></div>
@@ -226,7 +229,8 @@ details pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:10px 0 0;col
     </section>
 
     <section class="panel" aria-labelledby="matchTitle">
-      <h2 id="matchTitle">Match</h2>
+      <div class="panelhead"><h2 id="matchTitle">Match</h2><button id="analyzeBtn" class="ghost sm" hidden>Analyze with AI</button></div>
+      <p class="status" id="matchMsg" role="status" aria-live="polite"></p>
       <div id="matchBody"></div>
     </section>
 
@@ -329,6 +333,7 @@ const mk = a => new RegExp('(?:^|[^a-z0-9])(?:'+a.map(esc).join('|')+')(?![a-z0-
 const RX = K.map(([l,a]) => [l, mk(a)]);
 const ALIASES = Object.fromEntries(K);
 const EQ = Object.fromEntries(Object.entries(EQ_SRC).map(([l,a]) => [l, mk(a)]));
+const termIn = (text, term) => mk([term.toLowerCase()]).test(text);
 
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
@@ -337,8 +342,10 @@ const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/
 const shortMsg = s => (s || '').split('\n')[0].slice(0, 90);
 const setStatus = (id, text, isErr) => { $(id).textContent = text; $(id).classList.toggle('err', !!isErr); };
 const cleanOut = s => s.replace(/^```[a-z]*\s*$/gim,'').replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+const hashStr = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return String(h); };
 
-const state = {view:'original', tailored:'', editing:false, histId:null};
+const state = {view:'original', tailored:'', editing:false, histId:null, analysis:null};
+try { state.analysis = JSON.parse(store.get('rt_analysis') || 'null'); } catch(e) {}
 const baseResume = () => store.get('rt_resume') || '';
 const currentText = () => state.view === 'tailored' ? state.tailored : baseResume();
 
@@ -420,13 +427,14 @@ function orderModels(){
   const rest = getModelList().filter(m => m !== sel).sort((a,b) => rank(a) - rank(b) || b.localeCompare(a, undefined, {numeric:true}));
   return [sel, ...rest].filter(Boolean);
 }
-async function callModel(model, key, prompt){
+async function callModel(model, key, prompt, opts){
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
+    const temperature = opts && opts.temperature != null ? opts.temperature : 0.3;
     const r = await fetch(`${API}/models/${encodeURIComponent(model)}:generateContent`, {
       method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':key},
-      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature:0.3}}),
+      body: JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{temperature}}),
       signal: ctrl.signal
     });
     let d = {}; try { d = await r.json(); } catch(e) {}
@@ -440,7 +448,7 @@ async function callModel(model, key, prompt){
   } finally { clearTimeout(timer); }
 }
 const isKeyError = e => [400,401,403].includes(e.status) && /api[\s_-]?key/i.test(e.message);
-async function callWithFallback(prompt, onTry){
+async function callWithFallback(prompt, onTry, opts){
   const key = (store.get('rt_key') || '').trim();
   if (!key) throw new Error('Add your Gemini API key first. See the setup steps at the top.');
   if (navigator.onLine === false) throw new Error('You are offline. Connect to the internet and try again.');
@@ -449,7 +457,7 @@ async function callWithFallback(prompt, onTry){
   for (let i = 0; i < models.length; i++) {
     if (onTry) onTry(models[i], i + 1, models.length);
     try {
-      const text = await callModel(models[i], key, prompt);
+      const text = await callModel(models[i], key, prompt, opts);
       store.set('rt_model', models[i]); $('model').value = models[i];
       return {text, used:models[i], failed:failures.length};
     } catch(e) {
@@ -570,7 +578,6 @@ const rb = $('resBox');
 ['dragenter','dragover'].forEach(ev => rb.addEventListener(ev, e => { e.preventDefault(); rb.classList.add('drag'); }));
 ['dragleave','drop'].forEach(ev => rb.addEventListener(ev, e => { e.preventDefault(); rb.classList.remove('drag'); }));
 rb.addEventListener('drop', e => handleUpload(e.dataTransfer.files[0]));
-
 $$('.pasteResumeBtn').forEach(b => b.onclick = () => {
   resetTailored();
   if (state.view !== 'original') setView('original');
@@ -594,7 +601,7 @@ $('tidyBtn').onclick = async () => {
   finally { btn.removeAttribute('aria-busy'); btn.textContent = 'Tidy with AI'; }
 };
 
-/* Matching */
+/* Quick local estimate */
 function analyze(jd, rs){
   const inJd = RX.filter(([,r]) => r.test(jd));
   const hit = [], equiv = [], miss = [];
@@ -608,28 +615,132 @@ function analyze(jd, rs){
     score: t ? Math.round(hit.length / t * 100) : 0,
     potential: t ? Math.round((hit.length + equiv.length) / t * 100) : 0};
 }
-const group = (title, arr, cls, hint) => arr.length ? `<div class="group"><p class="gt">${title}<span class="gn">${arr.length}</span>${hint ? `<span class="gh">${hint}</span>` : ''}</p><div>${arr.map(x => `<span class="chip ${cls}">${escH(x)}</span>`).join('')}</div></div>` : '';
+const grp = (title, items, hint) => items.length ? `<div class="group"><p class="gt">${title}<span class="gn">${items.length}</span>${hint ? `<span class="gh">${hint}</span>` : ''}</p><div>${items.join('')}</div></div>` : '';
+const scoreBlock = (who, score, pot) => {
+  const color = score >= 75 ? 'var(--ok)' : score >= 50 ? 'var(--warn)' : 'var(--err)';
+  return `<div class="scoreline"><div><span class="score" style="color:${color}">${score}%</span><span class="scorelbl">${who}, keyword match</span></div>
+    <div class="potential"><b>${pot}%</b><br>honest maximum</div></div>
+    <div class="meter" role="img" aria-label="Keyword match ${score} percent, honest maximum ${pot} percent"><div class="pot" style="width:${pot}%"></div><div class="fill" style="width:${score}%"></div></div>`;
+};
+const fitTip = pot => pot >= 75 ? 'Strong fit. Tailoring should bring the score close to the maximum.'
+  : pot >= 50 ? 'Decent fit. Tailoring adds every keyword the resume can honestly support.'
+  : 'Low fit. Check whether this role really matches the resume, or tick missing skills you genuinely have.';
 function renderMatch(a){
   const who = state.view === 'tailored' ? 'Tailored resume' : 'Uploaded resume';
-  if (a.total === 0) { $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">No common skill keywords found in this job description. Tailoring will still adapt the wording to it.</p>'; return; }
-  const tip = a.potential >= 75 ? 'Strong fit. Tailoring should bring the score close to the potential.'
-    : a.potential >= 50 ? 'Decent fit. Tailoring will add the honest equivalents.'
-    : 'Low fit. Check whether this role really matches the resume before applying.';
-  $('matchBody').innerHTML =
-    `<div class="scoreline"><div><span class="score">${a.score}%</span><span class="scorelbl">${who}, keyword match</span></div>
-     <div class="potential"><b>${a.potential}%</b><br>honest potential</div></div>
-     <div class="meter" role="img" aria-label="Keyword match ${a.score} percent, honest potential ${a.potential} percent"><div class="pot" style="width:${a.potential}%"></div><div class="fill" style="width:${a.score}%"></div></div>
-     <p class="tip">${tip}</p>` +
-    group('In the resume', a.hit, 'ok') +
-    group('Can add honestly', a.equiv, 'eq', 'The resume already proves these under another name.') +
-    group('Missing', a.miss, 'miss', 'Add only the ones you have actually used.');
+  const note = '<p class="legend">Quick estimate from common skills. Tap Analyze with AI for a precise match against this job; it also runs automatically when you tailor.</p>';
+  if (a.total === 0) { $('matchBody').innerHTML = note; return; }
+  const chips = (arr, cls) => arr.map(x => `<span class="chip ${cls}">${escH(x)}</span>`);
+  $('matchBody').innerHTML = note + scoreBlock(who, a.score, a.potential) + `<p class="tip">${fitTip(a.potential)}</p>` +
+    grp('In the resume', chips(a.hit,'ok')) +
+    grp('Can add honestly', chips(a.equiv,'eq'), 'The resume already proves these under another name.') +
+    grp('Missing', chips(a.miss,'miss'), 'Add only the ones you have actually used.');
 }
+
+/* AI job analysis */
+const analysisPrompt = (jd, rs) => `You are an ATS (applicant tracking system) expert. Compare the job description with the resume.
+
+Return ONLY valid JSON, no other text, in this shape:
+{"jobTitle":"job title from the description","keywords":[{"term":"...","importance":"required","status":"present","evidence":""}]}
+
+Rules:
+- Extract the 15-35 most important keywords and short phrases a recruiter or ATS would search for: tools, technologies, languages, skills, methods, certifications, domain terms and key responsibility phrases. Skip generic words like "team", "work" or "company".
+- "term": the job description's exact wording, at most 4 words. No duplicates or near-duplicates.
+- "importance": "required" if the job lists it as required, must-have or core; otherwise "preferred".
+- "status": "present" if the resume already contains this exact term or an obvious spelling variant; "supported" if the resume does not use this term but clearly proves the candidate has it (for example the job says "Generative AI" and the resume shows building LLM features with Gemini); "missing" if the resume does not show it. Be strict: use "supported" only when a recruiter would agree.
+- "evidence": for "present" or "supported", a short phrase from the resume that proves it (max 15 words); otherwise "".
+
+JOB DESCRIPTION:
+${jd}
+
+RESUME:
+${rs}`;
+function parseJSON(text){
+  const s = text.indexOf('{'), e = text.lastIndexOf('}');
+  if (s < 0 || e <= s) throw new Error('Could not read the job analysis. Try again.');
+  return JSON.parse(text.slice(s, e + 1));
+}
+const analysisKey = (jd, rs) => hashStr(jd.trim() + '\n' + rs.trim());
+function currentAnalysis(){
+  const an = state.analysis;
+  return an && an.key === analysisKey($('jd').value, baseResume()) ? an : null;
+}
+function saveAnalysis(an){ state.analysis = an; store.set('rt_analysis', JSON.stringify(an)); }
+async function runAnalysis(jd, rs, onTry){
+  const r = await callWithFallback(analysisPrompt(jd, rs), onTry, {temperature:0.1});
+  const d = parseJSON(r.text);
+  const seen = new Set();
+  const kws = (d.keywords || []).filter(k => k && k.term).map(k => ({
+    term: String(k.term).trim().slice(0, 60),
+    imp: k.importance === 'required' ? 'required' : 'preferred',
+    status: ['present','supported','missing'].includes(k.status) ? k.status : 'missing',
+    evidence: String(k.evidence || '').slice(0, 160)
+  })).filter(k => { const l = k.term.toLowerCase(); if (!l || seen.has(l)) return false; seen.add(l); return true; });
+  for (const k of kws) {
+    if (termIn(rs, k.term)) k.status = 'present';
+    else if (k.status === 'present') k.status = 'supported';
+    if (k.status === 'supported' && !k.evidence) k.status = 'missing';
+  }
+  if (!kws.length) throw new Error('The job analysis came back empty. Try again.');
+  const prev = state.analysis && state.analysis.confirmed ? state.analysis.confirmed : [];
+  return {key: analysisKey(jd, rs), title: String(d.jobTitle || '').slice(0, 80), kws, confirmed: prev.filter(t => kws.some(k => k.term === t))};
+}
+const weight = k => k.imp === 'required' ? 2 : 1;
+function scoreAI(an, text){
+  let tot = 0, got = 0;
+  for (const k of an.kws) { tot += weight(k); if (termIn(text, k.term)) got += weight(k); }
+  return tot ? Math.round(got / tot * 100) : 0;
+}
+function potentialAI(an){
+  let tot = 0, got = 0;
+  for (const k of an.kws) { tot += weight(k); if (k.status !== 'missing' || an.confirmed.includes(k.term)) got += weight(k); }
+  return tot ? Math.round(got / tot * 100) : 0;
+}
+function renderAIMatch(an, text){
+  const who = state.view === 'tailored' ? 'Tailored resume' : 'Uploaded resume';
+  const sorted = [...an.kws].sort((a,b) => (a.imp === 'required' ? 0 : 1) - (b.imp === 'required' ? 0 : 1));
+  const inT = sorted.filter(k => termIn(text, k.term));
+  const can = sorted.filter(k => !termIn(text, k.term) && k.status !== 'missing');
+  const miss = sorted.filter(k => !termIn(text, k.term) && k.status === 'missing');
+  const chip = (k, cls) => `<span class="chip ${cls}${k.imp === 'required' ? ' req' : ''}"${k.evidence ? ` title="${escH('Proof: ' + k.evidence)}"` : ''}>${escH(k.term)}</span>`;
+  const pick = k => { const on = an.confirmed.includes(k.term); return `<label class="chip pick${on ? ' on' : ''}${k.imp === 'required' ? ' req' : ''}"><input type="checkbox" data-term="${escH(k.term)}"${on ? ' checked' : ''}>${escH(k.term)}</label>`; };
+  $('matchBody').innerHTML = scoreBlock(who, scoreAI(an, text), potentialAI(an)) +
+    `<p class="tip">${fitTip(potentialAI(an))}</p><p class="legend">${an.title ? 'Job: ' + escH(an.title) + '. ' : ''}Bold keywords are required by the job.</p>` +
+    grp('In the resume', inT.map(k => chip(k, 'ok'))) +
+    grp('Can add honestly', can.map(k => chip(k, 'eq')), 'The resume already proves these. Tailoring adds them in the job\'s exact wording.') +
+    grp('Missing', miss.map(pick), 'Tick only the ones you have genuinely used. They will be added to your skills when you tailor.');
+}
+$('matchBody').addEventListener('change', e => {
+  const cb = e.target.closest('input[data-term]');
+  if (!cb || !state.analysis) return;
+  const set = new Set(state.analysis.confirmed);
+  if (cb.checked) set.add(cb.dataset.term); else set.delete(cb.dataset.term);
+  state.analysis.confirmed = [...set];
+  saveAnalysis(state.analysis);
+  refreshMatch();
+  setStatus('matchMsg', state.analysis.confirmed.length ? 'Ticked skills will be added when you tailor.' : '');
+});
+$('analyzeBtn').onclick = async () => {
+  const jd = $('jd').value.trim(), rs = baseResume().trim();
+  if (!store.get('rt_key')) return setStatus('matchMsg', 'Add your Gemini API key first. See the setup steps at the top.', true);
+  const btn = $('analyzeBtn'); btn.setAttribute('aria-busy','true');
+  try {
+    const an = await runAnalysis(jd, rs, (m, i, n) => setStatus('matchMsg', `Reading the job with ${m} (${i} of ${n})`));
+    saveAnalysis(an); setStatus('matchMsg', ''); refreshMatch();
+  } catch(e) { setStatus('matchMsg', e.message, true); }
+  finally { btn.removeAttribute('aria-busy'); }
+};
+
 let matchTimer;
 function refreshMatch(){
-  const jd = $('jd').value.trim(), text = currentText();
+  const jd = $('jd').value.trim(), text = currentText(), ready = !!baseResume().trim() && jd.length >= 50;
+  $('analyzeBtn').hidden = !ready;
   if (!text.trim()) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Upload a resume and paste a job description to see how well they match.</p>';
   else if (jd.length < 50) $('matchBody').innerHTML = '<p class="empty" style="margin-top:8px">Paste a job description to see how well the resume matches it.</p>';
-  else renderMatch(analyze(jd, text));
+  else {
+    const an = currentAnalysis();
+    $('analyzeBtn').textContent = an ? 'Re-analyze' : 'Analyze with AI';
+    if (an) renderAIMatch(an, text); else renderMatch(analyze(jd, text));
+  }
   renderPaper(false);
 }
 function updateCount(){
@@ -661,8 +772,8 @@ function resumeToHtml(text){
   close();
   return html;
 }
-function highlight(root, labels){
-  const als = labels.flatMap(l => ALIASES[l] || []).sort((a,b) => b.length - a.length);
+function highlight(root, terms){
+  const als = [...new Set(terms.map(t => t.toLowerCase()))].sort((a,b) => b.length - a.length);
   if (!als.length) return;
   const re = new RegExp('(^|[^a-z0-9])(' + als.map(esc).join('|') + ')(?![a-z0-9])', 'gi');
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -702,7 +813,10 @@ function renderPaper(fresh){
   if (empty) { $('sheetMsg').textContent = ''; return; }
   $('paperContent').innerHTML = resumeToHtml(text);
   const jd = $('jd').value.trim();
-  if ($('hlToggle').checked && jd.length >= 50) highlight($('paperContent'), analyze(jd, text).hit);
+  if ($('hlToggle').checked && jd.length >= 50) {
+    const an = currentAnalysis();
+    highlight($('paperContent'), an ? an.kws.map(k => k.term) : analyze(jd, text).hit.flatMap(l => ALIASES[l] || []));
+  }
   fitPaper();
   if (fresh) { const p = $('paper'); p.classList.remove('fresh'); void p.offsetWidth; p.classList.add('fresh'); }
 }
@@ -741,9 +855,6 @@ $('editor').oninput = () => {
     store.set('rt_resume', v);
     if (!store.get('rt_resume_name')) store.set('rt_resume_name', 'Pasted resume');
   }
-  clearTimeout(matchTimer); matchTimer = setTimeout(() => {
-    const jd = $('jd').value.trim(); if (jd.length >= 50 && v.trim()) renderMatch(analyze(jd, v));
-  }, 300);
 };
 
 /* Job inputs */
@@ -767,36 +878,61 @@ $('pasteBtn').onclick = async () => {
 $('clearBtn').onclick = () => { $('jd').value = ''; $('jd').oninput(); $('jd').focus(); };
 $('newJobBtn').onclick = () => {
   ['role','company','jd'].forEach(id => { $(id).value = ''; store.set('rt_' + id, ''); });
-  $('jdMsg').textContent = ''; updateCount();
+  $('jdMsg').textContent = ''; setStatus('matchMsg',''); updateCount();
   resetTailored(); setView('original');
   $('role').focus();
 };
 
 /* Tailoring */
-function buildPrompt(jd, rs, a){
+function buildPrompt(jd, rs, an){
   const role = $('role').value.trim(), co = $('company').value.trim();
-  return `You are an expert resume writer and ATS specialist. Tailor the candidate's resume to the job description below. This must work for any role, so follow the job description's own language rather than a fixed template.
+  const targets = an.kws.filter(k => k.status !== 'missing');
+  const tLines = targets.map(k => `- ${k.term}${k.imp === 'required' ? ' (required)' : ''}${k.evidence ? ' | proof in resume: ' + k.evidence : ''}`).join('\n') || '- none';
+  const conf = an.confirmed;
+  const missing = an.kws.filter(k => k.status === 'missing' && !conf.includes(k.term)).map(k => k.term);
+  return `You are an expert resume writer and ATS specialist. Rewrite the candidate's resume so it matches the job description as closely as honestly possible. This must work for any role and any field.
 
-Strict rules:
-1. Keep the same sections, in the same order and with the same headings, as the candidate's resume. It must still fit on one page.
-2. Never invent anything. Keep every company, job title, date, project, feature, technology, metric and number exactly as given. Do not add tools, skills, responsibilities or experience that the resume does not already show.
-3. Do not exaggerate. Keep the strength of each claim: do not upgrade verbs (for example "Built" must not become "Architected", "Led", "Spearheaded" or "Owned"), and never describe the candidate as an expert, senior or lead unless the resume already does.
-4. Do not change what a technology does, and do not remove details. Every bullet in the original must still be present (rewording is fine), including every feature and tool it mentions.
-5. Use the job's exact wording where the resume already proves the skill. These job terms are honestly supported by the resume, so add them in the job's exact wording where they fit naturally (summary, skills, or the bullet that proves them): ${a.equiv.join(', ') || 'none'}.
-6. Rewrite the summary in 2-3 lines for this role, using only job terms the candidate genuinely has.
-7. Reorder skills within each category so the job's skills come first, and reorder bullets and blocks so the most relevant ones come first. Keep the existing skill categories and never merge unrelated items into one category. You may rename a category only if the new name is accurate.
-8. Start every bullet with a strong but accurate action verb. Keep each bullet under about 30 words.
-9. Output plain text only. No markdown, no asterisks, no # symbols. Keep the name on line 1 and contact details on line 2. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep job titles, company lines, project headings and education lines on their own lines as in the original.
-10. After the resume, write a line containing only ===NOTES=== and then: (a) 3-5 short lines on what you changed, (b) important job skills that are still missing, so the candidate can decide whether they genuinely have them.
+Goal: maximize the ATS keyword match using ONLY what the candidate genuinely has.
 
-${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}Job keywords still missing (do NOT add these): ${a.miss.join(', ') || 'none'}
+KEYWORDS TO INCLUDE (the resume proves these; use each at least once in exactly this wording):
+${tLines}
 
+SKILLS THE CANDIDATE CONFIRMS THEY HAVE (add each to the SKILLS section in the best-fitting category, in exactly this wording; you may mention them in the summary; do not claim work experience with them in bullets unless the resume already proves it):
+${conf.length ? conf.map(t => '- ' + t).join('\n') : '- none'}
+
+JOB KEYWORDS THE CANDIDATE DOES NOT HAVE (never add these anywhere):
+${missing.length ? missing.join(', ') : 'none'}
+
+How to tailor:
+1. Summary: rewrite it in 2-3 lines aimed at this job${an.title ? ' (' + an.title + ')' : ''}. Start with the job's title wording when it honestly describes the candidate's role, but never add seniority words like Senior, Lead or Principal that the resume does not support. Work in the most important required keywords.
+2. Skills: list the job's keywords first within each category, in the job's exact wording. You may rename a resume term to the job's equivalent wording when it means the same thing (for example "REST API Design" to "RESTful APIs"). Keep the existing categories; never merge unrelated items.
+3. Bullets: reword bullets to use the job's exact terms where the bullet genuinely proves them, and move the most relevant bullets and projects to the top of their section. Start each bullet with a strong but accurate action verb; keep each under about 30 words.
+4. Spread keywords naturally: required keywords should appear in the skills section and, where honest, in at least one bullet. Do not keyword-stuff or repeat a term more than three times.
+
+Honesty rules (strict):
+5. Never invent anything. Keep every company, job title, date, project, feature, technology, metric and number exactly as given. Do not add responsibilities or experience the resume does not show.
+6. Do not exaggerate: do not upgrade verbs (for example "Built" must not become "Architected", "Led", "Spearheaded" or "Owned").
+7. Do not remove details or change what a technology does. Every original bullet must still be present (rewording is fine).
+8. Keep the same sections, in the same order and with the same headings. It must still fit on one page.
+
+Format:
+9. Plain text only. No markdown, no asterisks, no # symbols. Name on line 1, contact details on line 2. Section headings in CAPITALS on their own line. Bullets start with "• ". Keep job titles, company lines, project headings and education lines on their own lines.
+10. After the resume, write a line containing only ===NOTES=== and then 3-5 short lines on what you changed.
+
+${role ? 'Target role: ' + role + '\n' : ''}${co ? 'Company: ' + co + '\n' : ''}
 JOB DESCRIPTION:
 ${jd}
 
 RESUME:
 ${rs}`;
 }
+const fixPrompt = (resume, terms, an) => `Below is a tailored resume. These job keywords are honestly supported by the candidate but do not appear in it yet:
+${terms.map(t => { const k = an.kws.find(x => x.term === t); return '- ' + t + (k && k.evidence ? ' | proof in resume: ' + k.evidence : ' | the candidate confirmed this skill, so add it to the SKILLS section'); }).join('\n')}
+
+Revise the resume minimally so each keyword appears at least once in exactly this wording, where it fits naturally (summary, skills, or the bullet that proves it). Change nothing else: keep every fact, number, bullet, section and line as it is, and keep the same plain-text format. Output only the full resume, nothing else.
+
+RESUME:
+${resume}`;
 function honestyCheck(orig, out){
   const warn = [];
   const risky = ["architected","spearheaded","led","headed","orchestrated","pioneered","owned","expert","senior","lead","mentored","managed a team"];
@@ -811,11 +947,15 @@ function honestyCheck(orig, out){
 }
 function showResult(e){
   $('resultPanel').hidden = false;
-  $('resultSummary').innerHTML = `Keyword match went from <b>${e.before}%</b> to <b>${e.after}%</b>. Read every line before sending; you need to be able to explain it in an interview.`;
+  $('resultSummary').innerHTML = `ATS keyword match went from <b>${e.before}%</b> to <b>${e.after}%</b>${e.potential ? ` (honest maximum ${e.potential}%)` : ''}. Read every line before sending; you need to be able to explain it in an interview.`;
   $('resultMeta').textContent = e.used ? `Made with ${e.used}${e.failed ? `, after ${e.failed} other model${e.failed > 1 ? 's' : ''} failed` : ''}.` : '';
   if (e.warns && e.warns.length) { $('warnOut').textContent = 'Honesty check\n' + e.warns.join('\n'); $('warnOut').hidden = false; }
   else $('warnOut').hidden = true;
-  if (e.notes) { $('notes').textContent = e.notes; $('notesBox').hidden = false; } else $('notesBox').hidden = true;
+  let notes = e.notes || '';
+  if (e.skipped && e.skipped.length) notes += `\n\nCould not fit naturally: ${e.skipped.join(', ')}. Add them by hand with Edit if they belong.`;
+  if (e.missing && e.missing.length) notes += `\n\nNot in the resume, so not added: ${e.missing.join(', ')}. If you genuinely have any of these, tick them under Missing in Match and tailor again.`;
+  notes = notes.trim();
+  if (notes) { $('notes').textContent = notes; $('notesBox').hidden = false; } else $('notesBox').hidden = true;
 }
 $('tailorBtn').onclick = async () => {
   const btn = $('tailorBtn');
@@ -827,15 +967,31 @@ $('tailorBtn').onclick = async () => {
   if (jd.length < 50) { $('jdMsg').textContent = 'Paste the full job description first.'; $('jd').focus(); return; }
   if (state.editing) toggleEdit(false);
 
-  const before = analyze(jd, rs);
   btn.setAttribute('aria-busy','true'); btn.textContent = 'Tailoring…'; setStatus('status','');
   try {
-    const r = await callWithFallback(buildPrompt(jd, rs, before), (m, i, n) => setStatus('status', `Writing with ${m} (${i} of ${n})`));
+    let an = currentAnalysis();
+    if (!an) {
+      an = await runAnalysis(jd, rs, (m, i, n) => setStatus('status', `Reading the job with ${m} (${i} of ${n})`));
+      saveAnalysis(an); refreshMatch();
+    }
+    const r = await callWithFallback(buildPrompt(jd, rs, an), (m, i, n) => setStatus('status', `Writing with ${m} (${i} of ${n})`));
     const [resPart, notesPart] = r.text.split('===NOTES===');
-    const clean = cleanOut(resPart);
-    const after = analyze(jd, clean);
+    let clean = cleanOut(resPart);
+    const targets = [...new Set(an.kws.filter(k => k.status !== 'missing').map(k => k.term).concat(an.confirmed))];
+    let absent = targets.filter(t => !termIn(clean, t));
+    if (absent.length) {
+      try {
+        const r2 = await callWithFallback(fixPrompt(clean, absent, an), () => setStatus('status', `Adding ${absent.length} missed keyword${absent.length > 1 ? 's' : ''}…`));
+        const c2 = cleanOut(r2.text.split('===NOTES===')[0]);
+        if (c2.length > clean.length * 0.85) clean = c2;
+      } catch(e) {}
+      absent = targets.filter(t => !termIn(clean, t));
+    }
     const entry = {id:Date.now(), date:new Date().toISOString(), role:$('role').value.trim(), company:$('company').value.trim(), jd,
-      before:before.score, after:after.score, text:clean, notes:(notesPart || '').trim(), warns:honestyCheck(rs, clean), used:r.used, failed:r.failed};
+      before:scoreAI(an, rs), after:scoreAI(an, clean), potential:potentialAI(an), text:clean, notes:(notesPart || '').trim(),
+      warns:honestyCheck(rs, clean), skipped:absent,
+      missing:an.kws.filter(k => k.status === 'missing' && !an.confirmed.includes(k.term)).map(k => k.term),
+      used:r.used, failed:r.failed};
     const h = getHist(); h.unshift(entry); setHist(h); renderHistory();
     state.tailored = clean; state.histId = entry.id;
     $('viewTail').hidden = false;
